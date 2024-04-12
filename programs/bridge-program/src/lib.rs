@@ -2,6 +2,7 @@ use anchor_lang::{prelude::*, solana_program};
 use solana_program::pubkey::Pubkey;
 mod contexts;
 use contexts::*;
+mod constants;
 mod states;
 
 declare_id!("HmW1m2rdNRGxRGnCrLavoe7QuWUJb1R2Tgf1nVgji4Sm");
@@ -9,25 +10,21 @@ declare_id!("HmW1m2rdNRGxRGnCrLavoe7QuWUJb1R2Tgf1nVgji4Sm");
 #[program]
 pub mod bridge_program {
 
-    use crate::contexts::AddTokenToWhitelist;
-
     use super::*;
 
-    pub fn add_to_whitelist(
-        ctx: Context<AddTokenToWhitelist>,
-        mint_of_token_whitelisted: Pubkey,
-        relayer_pk: Pubkey,
-    ) -> Result<()> {
-        ctx.accounts
-            .add_to_whitelist(&ctx.bumps, mint_of_token_whitelisted, relayer_pk)
+    pub fn initialize_bridge(ctx: Context<InitializeContract>, relayer_pk: Pubkey) -> Result<()> {
+        ctx.accounts.initialize_contract(&ctx.bumps, relayer_pk)
     }
 
-    pub fn initialize_bridge(ctx: Context<InitializeBridge>, amount: u64) -> Result<()> {
-        ctx.accounts.initialize_bridge(&ctx.bumps, amount)?;
-        ctx.accounts.deposit(amount)
+    pub fn add_liquidity(ctx: Context<AddLiquidity>, amount: u64) -> Result<()> {
+        ctx.accounts.add_liquidity(amount)
     }
 
-    pub fn bridge_and_close(ctx: Context<FinalizeBridge>) -> Result<()> {
-        ctx.accounts.burn_and_close_vault()
+    pub fn remove_liquidity(ctx: Context<RemoveLiquidity>, amount: u64) -> Result<()> {
+        ctx.accounts.remove_liquidity(amount)
     }
+
+    // [TO DO] relayer endpoint to send tokens from vault to user who bridged tokens
+
+    // [TO DO] user endpoint to send tokens to vault to bridge tokens back
 }
