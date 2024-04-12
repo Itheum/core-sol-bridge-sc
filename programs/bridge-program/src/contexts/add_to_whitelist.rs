@@ -32,10 +32,12 @@ impl<'info> AddTokenToWhitelist<'info> {
         &mut self,
         bumps: &AddTokenToWhitelistBumps,
         mint_of_token_whitelisted: Pubkey,
+        relayer_pk: Pubkey,
     ) -> Result<()> {
         self.whitelist.set_inner(Whitelist {
             mint_of_token_whitelisted,
             bump: bumps.whitelist,
+            relayer_pk,
         });
 
         Ok(())

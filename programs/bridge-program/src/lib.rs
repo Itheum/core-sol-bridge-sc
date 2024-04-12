@@ -16,9 +16,10 @@ pub mod bridge_program {
     pub fn add_to_whitelist(
         ctx: Context<AddTokenToWhitelist>,
         mint_of_token_whitelisted: Pubkey,
+        relayer_pk: Pubkey,
     ) -> Result<()> {
         ctx.accounts
-            .add_to_whitelist(&ctx.bumps, mint_of_token_whitelisted)
+            .add_to_whitelist(&ctx.bumps, mint_of_token_whitelisted, relayer_pk)
     }
 
     pub fn initialize_bridge(ctx: Context<InitializeBridge>, amount: u64) -> Result<()> {
