@@ -7,8 +7,8 @@ use anchor_spl::{
 use crate::states::BridgeState;
 
 #[derive(Accounts)]
-#[instruction(amount: u64, receiver: Pubkey)]
-pub struct SendFromLiquidity<'info> {
+#[instruction(amount: u64)]
+pub struct SendToLiquidity<'info> {
     #[account(
         mut,
         seeds=["bridge_state".as_ref()],
@@ -19,16 +19,12 @@ pub struct SendFromLiquidity<'info> {
 
     #[account(
         mut,
-        constraint=vault.amount >= amount,
-        associated_token::mint=mint_of_token_sent,
+        associated_token::mint=bridge_state.mint_of_token_whitelisted,
         associated_token::authority=bridge_state
     )]
     vault: Box<Account<'info, TokenAccount>>,
 
-    #[account(
-        mut,
-        address=bridge_state.relayer_pk.key()
-    )]
+    #[account(mut)]
     authority: Signer<'info>,
 
     #[account(
@@ -38,39 +34,37 @@ pub struct SendFromLiquidity<'info> {
 
     #[account(
         mut,
-
-        constraint= receiver_token_account.owner==receiver,
-        constraint=receiver_token_account.mint==bridge_state.mint_of_token_whitelisted.key()
+        constraint=authority_token_account.amount >= amount,
+        constraint=authority_token_account.owner==authority.key(),
+        constraint=authority_token_account.mint==bridge_state.mint_of_token_whitelisted
     )
     ]
-    receiver_token_account: Account<'info, TokenAccount>,
+    authority_token_account: Account<'info, TokenAccount>,
 
     system_program: Program<'info, System>,
     token_program: Program<'info, Token>,
     associated_token_program: Program<'info, AssociatedToken>,
 }
 
-impl<'info> SendFromLiquidity<'info> {
-    pub fn send_from_liquidity(&mut self, amount: u64) -> Result<()> {
-        let signer_seeds: [&[&[u8]]; 1] = [&[b"bridge_state", &[self.bridge_state.bump]]];
+impl<'info> SendToLiquidity<'info> {
+    pub fn send_to_liquidity(&mut self, amount: u64) -> Result<()> {
+        self.bridge_state.vault_amount += amount;
 
-        self.bridge_state.vault_amount -= amount;
         transfer_checked(
-            self.into_send_from_liquidity_context()
-                .with_signer(&signer_seeds),
+            self.into_send_to_liquidity_context(),
             amount,
             self.mint_of_token_sent.decimals,
         )
     }
 
-    fn into_send_from_liquidity_context(
+    fn into_send_to_liquidity_context(
         &self,
     ) -> CpiContext<'_, '_, '_, 'info, TransferChecked<'info>> {
         let cpi_accounts = TransferChecked {
-            from: self.vault.to_account_info(),
+            from: self.authority_token_account.to_account_info(),
+            to: self.vault.to_account_info(),
             mint: self.mint_of_token_sent.to_account_info(),
-            to: self.receiver_token_account.to_account_info(),
-            authority: self.bridge_state.to_account_info(),
+            authority: self.authority.to_account_info(),
         };
         CpiContext::new(self.token_program.to_account_info(), cpi_accounts)
     }
