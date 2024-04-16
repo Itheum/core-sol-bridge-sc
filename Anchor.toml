@@ -5,7 +5,7 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-bridge_program = "HmW1m2rdNRGxRGnCrLavoe7QuWUJb1R2Tgf1nVgji4Sm"
+bridge_program = "DRxp3EJv4hGQDze6Evf515KE1YwVgYNv6PiDp1dqF4pK"
 
 [registry]
 url = "https://api.apr.dev"
