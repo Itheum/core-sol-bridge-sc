@@ -3,6 +3,8 @@ use solana_program::pubkey::Pubkey;
 mod contexts;
 use contexts::*;
 mod constants;
+mod errors;
+mod macros;
 mod states;
 
 declare_id!("HmW1m2rdNRGxRGnCrLavoe7QuWUJb1R2Tgf1nVgji4Sm");
@@ -22,6 +24,14 @@ pub mod bridge_program {
 
     pub fn remove_liquidity(ctx: Context<RemoveLiquidity>, amount: u64) -> Result<()> {
         ctx.accounts.remove_liquidity(amount)
+    }
+
+    pub fn pause(ctx: Context<Pause>) -> Result<()> {
+        ctx.accounts.pause()
+    }
+
+    pub fn unpause(ctx: Context<Unpause>) -> Result<()> {
+        ctx.accounts.unpause()
     }
 
     // [TO DO] relayer endpoint to send tokens from vault to user who bridged tokens
