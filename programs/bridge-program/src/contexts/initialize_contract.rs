@@ -4,7 +4,10 @@ use anchor_spl::{
     token::{Mint, Token, TokenAccount},
 };
 
-use crate::{constants::ADMIN_PUBKEY, states::BridgeState};
+use crate::{
+    constants::ADMIN_PUBKEY,
+    states::{bridge::State, BridgeState},
+};
 
 #[derive(Accounts)]
 pub struct InitializeContract<'info> {
@@ -50,6 +53,7 @@ impl<'info> InitializeContract<'info> {
             relayer_pk,
             vault: self.vault.key(),
             vault_amount: 0u64,
+            state: State::Inactive,
         });
 
         Ok(())
