@@ -34,7 +34,14 @@ pub mod bridge_program {
         ctx.accounts.unpause()
     }
 
-    // [TO DO] relayer endpoint to send tokens from vault to user who bridged tokens
+    pub fn send_from_liquidity(
+        ctx: Context<SendFromLiquidity>,
+        amount: u64,
+        _receiver: Pubkey,
+    ) -> Result<()> {
+        require_active!(ctx.accounts.bridge_state);
+        ctx.accounts.send_from_liquidity(amount)
+    }
 
     // [TO DO] user endpoint to send tokens to vault to bridge tokens back
 }
