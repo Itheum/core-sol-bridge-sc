@@ -53,7 +53,7 @@ impl<'info> InitializeContract<'info> {
             relayer_pk,
             vault: self.vault.key(),
             vault_amount: 0u64,
-            state: State::Inactive,
+            state: State::Inactive.to_code(),
         });
 
         Ok(())

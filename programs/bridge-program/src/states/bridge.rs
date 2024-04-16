@@ -7,7 +7,7 @@ pub struct BridgeState {
     pub relayer_pk: Pubkey,
     pub vault: Pubkey,
     pub vault_amount: u64,
-    pub state: State,
+    pub state: u8,
 }
 
 impl Space for BridgeState {
@@ -18,4 +18,12 @@ impl Space for BridgeState {
 pub enum State {
     Inactive = 0,
     Active = 1,
+}
+impl State {
+    pub fn to_code(&self) -> u8 {
+        match self {
+            State::Inactive => 0,
+            State::Active => 1,
+        }
+    }
 }

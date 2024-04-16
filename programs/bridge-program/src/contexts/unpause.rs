@@ -25,7 +25,7 @@ pub struct Unpause<'info> {
 
 impl<'info> Unpause<'info> {
     pub fn unpause(&mut self) -> Result<()> {
-        self.bridge_state.state = State::Inactive;
+        self.bridge_state.state = State::Inactive.to_code();
         Ok(())
     }
 }
