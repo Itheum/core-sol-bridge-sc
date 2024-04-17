@@ -483,4 +483,60 @@ describe('bridge-program', () => {
     assert(Number(vault.amount) == 0);
   })
 
+  it('Pause contract by user (should fail)', async()=>{
+    try{
+      await program.methods.pause().signers([user]).accounts({
+        bridgeState: bridgeStatePda,
+        authority:user.publicKey,    
+      }).rpc()
+      assert(false, 'Should have thrown error')
+    }catch(err){
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2012)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'An address constraint was violated'
+      )
+    }
+  });
+
+  it('Pause contract by admin', async()=>{
+    await program.methods.pause().signers([admin]).accounts({
+      bridgeState: bridgeStatePda,
+      authority:admin.publicKey,    
+    }).rpc()
+
+    let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda);
+
+    assert(bridgeState.state === 0);
+
+  })
+
+
+  it('Unpause contract by user (should fail)', async()=>{
+    try{
+      await program.methods.unpause().signers([user]).accounts({
+        bridgeState: bridgeStatePda,
+        authority:user.publicKey,    
+      }).rpc()
+      assert(false, 'Should have thrown error')
+    }catch(err){
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2012)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'An address constraint was violated'
+      )
+    }
+  })
+
+  it('Unpause contract by admin', async()=>{
+    await program.methods.unpause().signers([admin]).accounts({
+      bridgeState: bridgeStatePda,
+      authority:admin.publicKey,    
+    }).rpc()
+
+    let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda);
+
+    assert(bridgeState.state === 1);
+
+  })
+
+
 })
