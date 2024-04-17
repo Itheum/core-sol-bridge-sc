@@ -203,4 +203,125 @@ describe('bridge-program', () => {
     assert(vault.mint.equals(itheum_token_mint.publicKey));
     assert(vault.owner.equals(bridgeStatePda));
   })
+
+
+  it('Add liquidity by user (should fail)', async()=>{
+    try{
+      await program.methods.addLiquidity(new anchor.BN(100e9)).signers([user]).accounts({
+        bridgeState: bridgeStatePda,
+        vault:vault_ata,
+        mintOfTokenSent: itheum_token_mint.publicKey,
+        authority:user.publicKey,    
+        authorityTokenAccount: itheum_token_user_ata,
+      }).rpc()
+      assert(false, 'Should have thrown error')
+    }catch(err){
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2012)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'An address constraint was violated'
+      )
+    }
+  });
+
+  it('Add liquidity by admin - not whitelisted mint (should fail)', async()=>{
+    try{
+      await program.methods.addLiquidity(new anchor.BN(1000e9)).signers([admin]).accounts({
+        bridgeState: bridgeStatePda,
+        vault:vault_ata,
+        mintOfTokenSent: another_token_mint.publicKey,
+        authority:admin.publicKey,    
+        authorityTokenAccount: another_token_admin_ata,
+      }).rpc()
+      assert(false, 'Should have thrown error')
+    }catch(err){
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2009)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'An associated constraint was violated'
+      )
+    }
+  });
+
+
+  it('Add liquidity by admin - wrong(mint) admin ATA (should fail)', async()=>{
+    try{
+      await program.methods.addLiquidity(new anchor.BN(1000e9)).signers([admin]).accounts({
+        bridgeState: bridgeStatePda,
+        vault:vault_ata,
+        mintOfTokenSent: itheum_token_mint.publicKey,
+        authority:admin.publicKey,    
+        authorityTokenAccount: another_token_admin_ata,
+      }).rpc()
+      assert(false, 'Should have thrown error')
+    }catch(err){
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'A raw constraint was violated'
+      )
+    }
+  });
+
+
+  it('Add liquidity by admin - wrong(owner) admin ATA (should fail)', async()=>{
+    try{
+      await program.methods.addLiquidity(new anchor.BN(1000e9)).signers([admin]).accounts({
+        bridgeState: bridgeStatePda,
+        vault:vault_ata,
+        mintOfTokenSent: itheum_token_mint.publicKey,
+        authority:admin.publicKey,    
+        authorityTokenAccount: itheum_token_user_ata,
+      }).rpc()
+      assert(false, 'Should have thrown error')
+    }catch(err){
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'A raw constraint was violated'
+      )
+    }
+  });
+
+
+  it('Add liquidity by admin - wrong amount (should fail)', async()=>{
+    try{
+      await program.methods.addLiquidity(new anchor.BN(3000e9)).signers([admin]).accounts({
+        bridgeState: bridgeStatePda,
+        vault:vault_ata,
+        mintOfTokenSent: itheum_token_mint.publicKey,
+        authority:admin.publicKey,    
+        authorityTokenAccount: itheum_token_admin_ata,
+      }).rpc()
+      assert(false, 'Should have thrown error')
+    }catch(err){
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'A raw constraint was violated'
+      )
+    }
+  });
+
+  it('Add liquidity by admin', async()=>{
+    await program.methods.addLiquidity(new anchor.BN(1000e9)).signers([admin]).accounts({
+      bridgeState: bridgeStatePda,
+      vault:vault_ata,
+      mintOfTokenSent: itheum_token_mint.publicKey,
+      authority:admin.publicKey,    
+      authorityTokenAccount: itheum_token_admin_ata,
+    }).rpc()
+
+
+    let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda);
+
+    
+    assert(bridgeState.relayerPk.equals(admin.publicKey));
+    assert(bridgeState.vault.equals(vault_ata));
+    assert(bridgeState.vaultAmount.toNumber() === 1000e9);
+    assert(bridgeState.mintOfTokenWhitelisted.equals(itheum_token_mint.publicKey)); 
+    assert(bridgeState.state === 0);
+
+
+    let vault = await getAccount(connection, vault_ata);
+  
+    assert(Number(vault.amount) == 1000e9);
+
+  });
+
 })
