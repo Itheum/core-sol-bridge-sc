@@ -83,7 +83,7 @@ describe('bridge-program', () => {
     return signature
   }
 
-  it('Airdrop and create mints', async () => {
+  before('Airdrop and create mints', async () => {
     let lamports = await getMinimumBalanceForRentExemptMint(connection)
 
     let tx2 = new Transaction()
@@ -138,7 +138,26 @@ describe('bridge-program', () => {
       ]),
     ]
 
-    await provider.sendAndConfirm(tx, [admin]).then(log)
+    await provider.sendAndConfirm(tx, [admin])
+  })
+
+
+  it('Send to liquidity by user - bridge state not initialized (should fail)', async () => {
+    try{
+      await program.methods.sendToLiquidity(new anchor.BN(100e9)).signers([user]).accounts({
+        bridgeState: bridgeStatePda,
+        vault:vault_ata,
+        mintOfTokenSent: itheum_token_mint.publicKey,
+        authority:user.publicKey,    
+        authorityTokenAccount: itheum_token_user_ata,
+      }).rpc()
+      assert(false, 'Should have thrown error')
+    }catch(err){
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(3012)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'The program expected this account to be already initialized'
+      )
+    }
   })
 
 
@@ -149,7 +168,7 @@ describe('bridge-program', () => {
         vault:vault_ata,
         mintOfTokenWhitelisted: itheum_token_mint.publicKey,
         authority:user.publicKey,    
-      }).rpc().then(confirm).then(log)
+      }).rpc()
       assert(false, 'Should have thrown error')
     }catch(err){
       expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2012)
@@ -166,7 +185,7 @@ describe('bridge-program', () => {
       vault:vault_ata,
       mintOfTokenWhitelisted: itheum_token_mint.publicKey,
       authority:admin.publicKey,    
-    }).rpc().then(confirm).then(log)
+    }).rpc()
 
 
   let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda);
