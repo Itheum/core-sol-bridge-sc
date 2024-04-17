@@ -7,7 +7,7 @@ mod errors;
 mod macros;
 mod states;
 
-declare_id!("DRxp3EJv4hGQDze6Evf515KE1YwVgYNv6PiDp1dqF4pK");
+declare_id!("Fe5HCevToVhf1TsN9fwMrTgD8jcUM3bjFGfNXCmYjzD6");
 
 #[program]
 pub mod bridge_program {

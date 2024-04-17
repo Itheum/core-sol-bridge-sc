@@ -102,6 +102,9 @@ To test against localnet, update the `cluster` section in `Anchor.toml`:
 cluster = "localnet"
 ```
 
+Because the program needs a constant admin address, the tests will use the PRIVATE_KEY stored in the `.env` file. This key is used to sign transactions in the tests.
+Copy the content from `env.copy` to `.env`. 
+
 ```
 $ anchor test
 ```
