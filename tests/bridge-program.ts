@@ -539,4 +539,287 @@ describe('bridge-program', () => {
   })
 
 
+  it('Send from liquidity by user (should fail)', async()=> {
+
+    await program.methods.addLiquidity(new anchor.BN(1000e9)).signers([admin]).accounts({
+      bridgeState: bridgeStatePda,
+      vault:vault_ata,
+      mintOfTokenSent: itheum_token_mint.publicKey,
+      authority:admin.publicKey,    
+      authorityTokenAccount: itheum_token_admin_ata,
+    }).rpc()
+
+    try{
+      await program.methods.sendFromLiquidity(new anchor.BN(1000e9), user.publicKey).signers([user]).accounts({
+        bridgeState: bridgeStatePda,
+        vault:vault_ata,
+        mintOfTokenSent: itheum_token_mint.publicKey,
+        authority:user.publicKey,    
+        receiverTokenAccount: itheum_token_user_ata,
+      }).rpc()
+      assert(false, 'Should have thrown error')
+    }catch(err){
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2012)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'An address constraint was violated'
+      )
+    }
+  })
+
+  it('Send from liquidity by relayer - wrong amount (should fail)', async()=>{
+
+    try{
+      await program.methods.sendFromLiquidity(new anchor.BN(3000e9), user.publicKey).signers([admin]).accounts({
+        bridgeState: bridgeStatePda,
+        vault:vault_ata,
+        mintOfTokenSent: itheum_token_mint.publicKey,
+        authority:admin.publicKey,    
+        receiverTokenAccount: itheum_token_user_ata,
+      }).rpc()
+      assert(false, 'Should have thrown error')
+    }catch(err){
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'A raw constraint was violated'
+      )
+    }
+  })
+
+  it('Send from liquidity by relayer - wrong whitelisted mint (should fail)', async()=>{
+
+    try{
+      await program.methods.sendFromLiquidity(new anchor.BN(1000e9), user.publicKey).signers([admin]).accounts({
+        bridgeState: bridgeStatePda,
+        vault:vault_ata,
+        mintOfTokenSent: another_token_mint.publicKey,
+        authority:admin.publicKey,    
+        receiverTokenAccount: itheum_token_user_ata,
+      }).rpc()
+      assert(false, 'Should have thrown error')
+    }catch(err){
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2009)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'An associated constraint was violated'
+      )
+    }
+  })
+
+  
+  it('Send from liquidity by relayer - wrong(mint) user ATA (should fail)', async()=>{
+    try{
+      await program.methods.sendFromLiquidity(new anchor.BN(1000e9), user.publicKey).signers([admin]).accounts({
+        bridgeState: bridgeStatePda,
+        vault:vault_ata,
+        mintOfTokenSent: itheum_token_mint.publicKey,
+        authority:admin.publicKey,    
+        receiverTokenAccount: another_token_user_ata,
+      }).rpc()
+      assert(false, 'Should have thrown error')
+    }catch(err){
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'A raw constraint was violated'
+      )
+    }
+  })
+
+
+  it('Send from liquidity by relayer - wrong(owner) user ATA (should fail)', async()=>{
+    try{
+      await program.methods.sendFromLiquidity(new anchor.BN(1000e9), user.publicKey).signers([admin]).accounts({
+        bridgeState: bridgeStatePda,
+        vault:vault_ata,
+        mintOfTokenSent: itheum_token_mint.publicKey,
+        authority:admin.publicKey,    
+        receiverTokenAccount: itheum_token_admin_ata,
+      }).rpc()
+      assert(false, 'Should have thrown error')
+    }catch(err){
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'A raw constraint was violated'
+      )
+    }
+  })
+
+
+  it('Send from liquidity by relayer - paused contract (should fail)', async()=>{
+
+      await program.methods.pause().signers([admin]).accounts({
+        bridgeState: bridgeStatePda,
+        authority:admin.publicKey,    
+      }).rpc()
+
+  
+      try{
+    await program.methods.sendFromLiquidity(new anchor.BN(100e9), user.publicKey).signers([admin]).accounts({
+      bridgeState: bridgeStatePda,
+      vault:vault_ata,
+      mintOfTokenSent: itheum_token_mint.publicKey,
+      authority:admin.publicKey,    
+      receiverTokenAccount: itheum_token_user_ata,
+    }).rpc()
+  }catch(err){
+    expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6000)
+    expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+      'Program is paused'
+    )
+  }
+   
+  })
+
+  it('Send from liquidity by relayer to user', async()=>{
+
+    await program.methods.unpause().signers([admin]).accounts({
+      bridgeState: bridgeStatePda,
+      authority:admin.publicKey,    
+    }).rpc()
+
+    await program.methods.sendFromLiquidity(new anchor.BN(100e9), user.publicKey).signers([admin]).accounts({
+      bridgeState: bridgeStatePda,
+      vault:vault_ata,
+      mintOfTokenSent: itheum_token_mint.publicKey,
+      authority:admin.publicKey,    
+      receiverTokenAccount: itheum_token_user_ata,
+    }).rpc()
+
+    let vault = await getAccount(connection, vault_ata);
+
+    assert(Number(vault.amount) == 900e9);
+
+    let userAta = await getAccount(connection, itheum_token_user_ata);
+
+    assert(Number(userAta.amount) == 200e9); // 100e9 was already in user's account
+
+
+
+    let bridge = await program.account.bridgeState.fetch(bridgeStatePda);
+
+    assert(bridge.vaultAmount.toNumber() == 900e9);
+  })
+
+
+  it('Send to liquidity by user - paused contract (should fail)', async () =>{
+    await program.methods.pause().signers([admin]).accounts({
+      bridgeState: bridgeStatePda,
+      authority:admin.publicKey,    
+    }).rpc()
+
+    try{
+      await program.methods.sendToLiquidity(new anchor.BN(100e9)).signers([user]).accounts({
+        bridgeState: bridgeStatePda,
+        vault:vault_ata,
+        mintOfTokenSent: itheum_token_mint.publicKey,
+        authority:user.publicKey,    
+        authorityTokenAccount: itheum_token_user_ata,
+      }).rpc()
+    }catch(err){
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6000)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'Program is paused'
+      )
+    }
+  })
+
+  it('Sent to liquidity by user - wrong amount (should fail)', async () =>{
+    await program.methods.unpause().signers([admin]).accounts({
+      bridgeState: bridgeStatePda,
+      authority:admin.publicKey,    
+    }).rpc()
+
+    try{
+      await program.methods.sendToLiquidity(new anchor.BN(1000e9)).signers([user]).accounts({
+        bridgeState: bridgeStatePda,
+        vault:vault_ata,
+        mintOfTokenSent: itheum_token_mint.publicKey,
+        authority:user.publicKey,    
+        authorityTokenAccount: itheum_token_user_ata,
+      }).rpc()
+    }catch(err){
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'A raw constraint was violated'
+      )
+    }
+  })
+
+  it('Send to liquidity by user - wrong whitelisted mint (should fail)', async () =>{
+
+      try{
+        await program.methods.sendToLiquidity(new anchor.BN(100e9)).signers([user]).accounts({
+          bridgeState: bridgeStatePda,
+          vault:vault_ata,
+          mintOfTokenSent: another_token_mint.publicKey,
+          authority:user.publicKey,    
+          authorityTokenAccount: itheum_token_user_ata,
+        }).rpc()
+      }catch(err){
+        expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2009)
+        expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+          'An associated constraint was violated'
+        )
+      }
+})
+
+  it('Send to liquidity by user - wrong(mint) user ATA (should fail)', async () =>{
+
+    try{
+      await program.methods.sendToLiquidity(new anchor.BN(100e9)).signers([user]).accounts({
+        bridgeState: bridgeStatePda,
+        vault:vault_ata,
+        mintOfTokenSent: itheum_token_mint.publicKey,
+        authority:user.publicKey,    
+        authorityTokenAccount: another_token_user_ata,
+      }).rpc()
+    }catch(err){
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'A raw constraint was violated'
+      )
+    }
+
+  })
+
+
+  it('Send to liquidity by user - wrong(owner) user ATA (should fail)', async () =>{
+
+    try{
+      await program.methods.sendToLiquidity(new anchor.BN(100e9)).signers([user]).accounts({
+        bridgeState: bridgeStatePda,
+        vault:vault_ata,
+        mintOfTokenSent: itheum_token_mint.publicKey,
+        authority:user.publicKey,    
+        authorityTokenAccount: itheum_token_admin_ata,
+      }).rpc()
+    }catch(err){
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'A raw constraint was violated'
+      )
+    }
+  })
+
+
+  it('Send to liquidity by user', async () =>{
+    await program.methods.sendToLiquidity(new anchor.BN(200e9)).signers([user]).accounts({
+      bridgeState: bridgeStatePda,
+      vault:vault_ata,
+      mintOfTokenSent: itheum_token_mint.publicKey,
+      authority:user.publicKey,    
+      authorityTokenAccount: itheum_token_user_ata,
+    }).rpc()
+
+    let vault = await getAccount(connection, vault_ata);
+
+    assert(Number(vault.amount) == 1100e9);
+
+    let userAta = await getAccount(connection, itheum_token_user_ata);
+
+    assert(Number(userAta.amount) == 0e9);
+
+    let bridge = await program.account.bridgeState.fetch(bridgeStatePda);
+
+    assert(bridge.vaultAmount.toNumber() == 1100e9);
+  })
+
 })
