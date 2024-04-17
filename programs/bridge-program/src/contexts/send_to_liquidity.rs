@@ -19,7 +19,7 @@ pub struct SendToLiquidity<'info> {
 
     #[account(
         mut,
-        associated_token::mint=bridge_state.mint_of_token_whitelisted,
+        associated_token::mint=mint_of_token_sent,
         associated_token::authority=bridge_state
     )]
     vault: Box<Account<'info, TokenAccount>>,
