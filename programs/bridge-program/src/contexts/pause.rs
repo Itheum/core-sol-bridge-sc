@@ -25,7 +25,7 @@ pub struct Pause<'info> {
 
 impl<'info> Pause<'info> {
     pub fn pause(&mut self) -> Result<()> {
-        self.bridge_state.state = State::Active.to_code();
+        self.bridge_state.state = State::Inactive.to_code();
         Ok(())
     }
 }
