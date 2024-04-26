@@ -18,7 +18,7 @@ pub struct InitializeContract<'info> {
         bump,
         space=BridgeState::INIT_SPACE,
     )]
-    bridge_state: Account<'info, BridgeState>,
+    pub bridge_state: Account<'info, BridgeState>,
 
     #[account(
         init_if_needed,
@@ -26,15 +26,15 @@ pub struct InitializeContract<'info> {
         associated_token::mint=mint_of_token_whitelisted,
         associated_token::authority=bridge_state,
     )]
-    vault: Account<'info, TokenAccount>,
+    pub vault: Account<'info, TokenAccount>,
 
-    mint_of_token_whitelisted: Account<'info, Mint>,
+    pub mint_of_token_whitelisted: Account<'info, Mint>,
 
     #[account(
         mut,
         address=ADMIN_PUBKEY,
     )]
-    authority: Signer<'info>,
+    pub authority: Signer<'info>,
 
     system_program: Program<'info, System>,
     token_program: Program<'info, Token>,

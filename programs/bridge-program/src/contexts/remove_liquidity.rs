@@ -15,7 +15,7 @@ pub struct RemoveLiquidity<'info> {
         bump=bridge_state.bump,
         has_one=vault,
     )]
-    bridge_state: Box<Account<'info, BridgeState>>,
+    pub bridge_state: Box<Account<'info, BridgeState>>,
 
     #[account(
         mut,
@@ -23,25 +23,25 @@ pub struct RemoveLiquidity<'info> {
         associated_token::mint=mint_of_token_sent,
         associated_token::authority=bridge_state
     )]
-    vault: Box<Account<'info, TokenAccount>>,
+    pub vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
         address=ADMIN_PUBKEY,
     )]
-    authority: Signer<'info>,
+    pub authority: Signer<'info>,
 
     #[account(
         mut,
         constraint=mint_of_token_sent.key()==bridge_state.mint_of_token_whitelisted,
     )]
-    mint_of_token_sent: Account<'info, Mint>,
+    pub mint_of_token_sent: Account<'info, Mint>,
 
     #[account(mut,
         constraint=authority_token_account.owner==authority.key(),
         constraint=authority_token_account.mint==mint_of_token_sent.key(),
     )]
-    authority_token_account: Account<'info, TokenAccount>,
+    pub authority_token_account: Account<'info, TokenAccount>,
 
     system_program: Program<'info, System>,
     token_program: Program<'info, Token>,

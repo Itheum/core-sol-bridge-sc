@@ -23,18 +23,18 @@ pub struct SendFromLiquidity<'info> {
         associated_token::mint=mint_of_token_sent,
         associated_token::authority=bridge_state
     )]
-    vault: Box<Account<'info, TokenAccount>>,
+    pub vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
         address=bridge_state.relayer_pk.key()
     )]
-    authority: Signer<'info>,
+    pub authority: Signer<'info>,
 
     #[account(
         constraint=mint_of_token_sent.key()==bridge_state.mint_of_token_whitelisted,
     )]
-    mint_of_token_sent: Box<Account<'info, Mint>>,
+    pub mint_of_token_sent: Box<Account<'info, Mint>>,
 
     #[account(
         mut,
@@ -43,7 +43,7 @@ pub struct SendFromLiquidity<'info> {
         constraint=receiver_token_account.mint==bridge_state.mint_of_token_whitelisted.key()
     )
     ]
-    receiver_token_account: Account<'info, TokenAccount>,
+    pub receiver_token_account: Account<'info, TokenAccount>,
 
     system_program: Program<'info, System>,
     token_program: Program<'info, Token>,

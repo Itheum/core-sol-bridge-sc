@@ -12,13 +12,13 @@ pub struct Pause<'info> {
         seeds=["bridge_state".as_ref()],
         bump=bridge_state.bump,
     )]
-    bridge_state: Box<Account<'info, BridgeState>>,
+    pub bridge_state: Box<Account<'info, BridgeState>>,
 
     #[account(
         mut,
         address=ADMIN_PUBKEY,
     )]
-    authority: Signer<'info>,
+    pub authority: Signer<'info>,
 
     system_program: Program<'info, System>,
 }

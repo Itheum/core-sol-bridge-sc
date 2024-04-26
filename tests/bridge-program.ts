@@ -670,6 +670,14 @@ describe('bridge-program', () => {
 
   it('Send from liquidity by relayer to user', async()=>{
 
+
+
+    program.addEventListener("SendFromLiquidityEvent", (event) => {
+      assert(event.from.toBase58() == vault_ata.toBase58());
+      assert(event.to.toBase58() == itheum_token_user_ata.toBase58());
+      assert(event.mint.toBase58() == itheum_token_mint.publicKey.toBase58());  
+    });
+
     await program.methods.unpause().signers([admin]).accounts({
       bridgeState: bridgeStatePda,
       authority:admin.publicKey,    
@@ -683,6 +691,8 @@ describe('bridge-program', () => {
       receiverTokenAccount: itheum_token_user_ata,
     }).rpc()
 
+ 
+
     let vault = await getAccount(connection, vault_ata);
 
     assert(Number(vault.amount) == 900e9);
@@ -690,7 +700,6 @@ describe('bridge-program', () => {
     let userAta = await getAccount(connection, itheum_token_user_ata);
 
     assert(Number(userAta.amount) == 200e9); // 100e9 was already in user's account
-
 
 
     let bridge = await program.account.bridgeState.fetch(bridgeStatePda);
