@@ -12,3 +12,7 @@ pub mod send_from_liquidity;
 pub use send_from_liquidity::*;
 pub mod send_to_liquidity;
 pub use send_to_liquidity::*;
+pub mod update_relayer;
+pub use update_relayer::*;
+pub mod update_whitelisted_mint;
+pub use update_whitelisted_mint::*;

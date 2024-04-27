@@ -50,3 +50,15 @@ pub struct SendToLiquidityEvent {
     pub amount: u64,
     pub mint: Pubkey,
 }
+
+#[event]
+pub struct UpdateRelayerEvent {
+    pub from: Pubkey,
+    pub relayer_pk: Pubkey,
+}
+
+#[event]
+pub struct UpdateWhitelistedMintEvent {
+    pub from: Pubkey,
+    pub mint_of_token_whitelisted: Pubkey,
+}

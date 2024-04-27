@@ -29,6 +29,26 @@ pub mod bridge_program {
         ctx.accounts.initialize_contract(&ctx.bumps, relayer_pk)
     }
 
+    pub fn update_relayer(ctx: Context<UpdateRelayer>, relayer_pk: Pubkey) -> Result<()> {
+        emit!(UpdateRelayerEvent {
+            from: ctx.accounts.authority.key(),
+            relayer_pk,
+        });
+        ctx.accounts.update_relayer(relayer_pk)
+    }
+
+    pub fn update_whitelisted_mint(
+        ctx: Context<UpdateWhitelistedMint>,
+        mint_of_token_whitelisted: Pubkey,
+    ) -> Result<()> {
+        emit!(UpdateWhitelistedMintEvent {
+            from: ctx.accounts.authority.key(),
+            mint_of_token_whitelisted,
+        });
+        ctx.accounts
+            .update_whitelisted_mint(mint_of_token_whitelisted)
+    }
+
     pub fn add_liquidity(ctx: Context<AddLiquidity>, amount: u64) -> Result<()> {
         emit!(AddLiquidityEvent {
             from: ctx.accounts.authority_token_account.key(),
