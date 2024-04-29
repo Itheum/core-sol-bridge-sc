@@ -9,7 +9,7 @@ mod macros;
 mod states;
 use events::*;
 
-declare_id!("Fe5HCevToVhf1TsN9fwMrTgD8jcUM3bjFGfNXCmYjzD6");
+declare_id!("A7c6B6WbfL9bz8bU2Yy24DQrBwzWfED7uZxGhQDu9xNM");
 
 #[program]
 pub mod bridge_program {
@@ -98,8 +98,19 @@ pub mod bridge_program {
         ctx.accounts.send_from_liquidity(amount)
     }
 
-    pub fn send_to_liquidity(ctx: Context<SendToLiquidity>, amount: u64) -> Result<()> {
+    pub fn send_to_liquidity(
+        ctx: Context<SendToLiquidity>,
+        amount: u64,
+        destination_address: String,
+        destination_address_signature: String,
+    ) -> Result<()> {
         require_active!(ctx.accounts.bridge_state);
+        msg!("amount_sent: {}", amount);
+        msg!("destination_address: {}", destination_address);
+        msg!(
+            "destination_address_signature: {}",
+            destination_address_signature
+        );
         emit!(SendToLiquidityEvent {
             from: ctx.accounts.authority_token_account.key(),
             to: ctx.accounts.vault.key(),

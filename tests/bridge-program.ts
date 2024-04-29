@@ -144,7 +144,7 @@ describe('bridge-program', () => {
 
   it('Send to liquidity by user - bridge state not initialized (should fail)', async () => {
     try{
-      await program.methods.sendToLiquidity(new anchor.BN(100e9)).signers([user]).accounts({
+      await program.methods.sendToLiquidity(new anchor.BN(100e9), "erd", "signature" ).signers([user]).accounts({
         bridgeState: bridgeStatePda,
         vault:vault_ata,
         mintOfTokenSent: itheum_token_mint.publicKey,
@@ -715,7 +715,7 @@ describe('bridge-program', () => {
     }).rpc()
 
     try{
-      await program.methods.sendToLiquidity(new anchor.BN(100e9)).signers([user]).accounts({
+      await program.methods.sendToLiquidity(new anchor.BN(100e9),"erd...","signature").signers([user]).accounts({
         bridgeState: bridgeStatePda,
         vault:vault_ata,
         mintOfTokenSent: itheum_token_mint.publicKey,
@@ -737,7 +737,7 @@ describe('bridge-program', () => {
     }).rpc()
 
     try{
-      await program.methods.sendToLiquidity(new anchor.BN(1000e9)).signers([user]).accounts({
+      await program.methods.sendToLiquidity(new anchor.BN(1000e9),"erd...","signature").signers([user]).accounts({
         bridgeState: bridgeStatePda,
         vault:vault_ata,
         mintOfTokenSent: itheum_token_mint.publicKey,
@@ -755,7 +755,7 @@ describe('bridge-program', () => {
   it('Send to liquidity by user - wrong whitelisted mint (should fail)', async () =>{
 
       try{
-        await program.methods.sendToLiquidity(new anchor.BN(100e9)).signers([user]).accounts({
+        await program.methods.sendToLiquidity(new anchor.BN(100e9),"erd...","signature").signers([user]).accounts({
           bridgeState: bridgeStatePda,
           vault:vault_ata,
           mintOfTokenSent: another_token_mint.publicKey,
@@ -773,7 +773,7 @@ describe('bridge-program', () => {
   it('Send to liquidity by user - wrong(mint) user ATA (should fail)', async () =>{
 
     try{
-      await program.methods.sendToLiquidity(new anchor.BN(100e9)).signers([user]).accounts({
+      await program.methods.sendToLiquidity(new anchor.BN(100e9),"erd...","signature").signers([user]).accounts({
         bridgeState: bridgeStatePda,
         vault:vault_ata,
         mintOfTokenSent: itheum_token_mint.publicKey,
@@ -793,7 +793,7 @@ describe('bridge-program', () => {
   it('Send to liquidity by user - wrong(owner) user ATA (should fail)', async () =>{
 
     try{
-      await program.methods.sendToLiquidity(new anchor.BN(100e9)).signers([user]).accounts({
+      await program.methods.sendToLiquidity(new anchor.BN(100e9),"erd...","signature").signers([user]).accounts({
         bridgeState: bridgeStatePda,
         vault:vault_ata,
         mintOfTokenSent: itheum_token_mint.publicKey,
@@ -810,7 +810,7 @@ describe('bridge-program', () => {
 
 
   it('Send to liquidity by user', async () =>{
-    await program.methods.sendToLiquidity(new anchor.BN(200e9)).signers([user]).accounts({
+    await program.methods.sendToLiquidity(new anchor.BN(200e9),"erd...","signature").signers([user]).accounts({
       bridgeState: bridgeStatePda,
       vault:vault_ata,
       mintOfTokenSent: itheum_token_mint.publicKey,
