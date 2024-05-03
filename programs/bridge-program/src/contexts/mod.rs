@@ -16,3 +16,5 @@ pub mod update_relayer;
 pub use update_relayer::*;
 pub mod update_whitelisted_mint;
 pub use update_whitelisted_mint::*;
+pub mod deposit_limits;
+pub use deposit_limits::*;

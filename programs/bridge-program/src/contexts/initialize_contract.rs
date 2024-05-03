@@ -46,6 +46,8 @@ impl<'info> InitializeContract<'info> {
         &mut self,
         bumps: &InitializeContractBumps,
         relayer_pk: Pubkey,
+        minimum_deposit: u64,
+        maximum_deposit: u64,
     ) -> Result<()> {
         self.bridge_state.set_inner(BridgeState {
             bump: bumps.bridge_state,
@@ -54,6 +56,8 @@ impl<'info> InitializeContract<'info> {
             vault: self.vault.key(),
             vault_amount: 0u64,
             state: State::Inactive.to_code(),
+            minimum_deposit,
+            maximum_deposit,
         });
 
         Ok(())

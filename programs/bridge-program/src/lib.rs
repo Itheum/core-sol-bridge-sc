@@ -14,11 +14,16 @@ declare_id!("A7c6B6WbfL9bz8bU2Yy24DQrBwzWfED7uZxGhQDu9xNM");
 #[program]
 pub mod bridge_program {
 
-    use crate::states::bridge::State;
+    use crate::{errors::Errors, states::bridge::State};
 
     use super::*;
 
-    pub fn initialize_bridge(ctx: Context<InitializeContract>, relayer_pk: Pubkey) -> Result<()> {
+    pub fn initialize_bridge(
+        ctx: Context<InitializeContract>,
+        relayer_pk: Pubkey,
+        minimum_deposit: u64,
+        maximum_deposit: u64,
+    ) -> Result<()> {
         emit!(InitailizeContractEvent {
             mint_of_token_whitelisted: ctx.accounts.mint_of_token_whitelisted.key(),
             relayer_pk,
@@ -26,7 +31,8 @@ pub mod bridge_program {
             vault_amount: 0u64,
             state: State::Inactive.to_code(),
         });
-        ctx.accounts.initialize_contract(&ctx.bumps, relayer_pk)
+        ctx.accounts
+            .initialize_contract(&ctx.bumps, relayer_pk, minimum_deposit, maximum_deposit)
     }
 
     pub fn update_relayer(ctx: Context<UpdateRelayer>, relayer_pk: Pubkey) -> Result<()> {
@@ -67,6 +73,15 @@ pub mod bridge_program {
         ctx.accounts.remove_liquidity(amount)
     }
 
+    pub fn set_deposit_limits(
+        ctx: Context<DepositLimits>,
+        minimum_deposit: u64,
+        maximum_deposit: u64,
+    ) -> Result<()> {
+        ctx.accounts
+            .set_deposit_limits(minimum_deposit, maximum_deposit)
+    }
+
     pub fn pause(ctx: Context<Pause>) -> Result<()> {
         emit!(PauseEvent {
             from: ctx.accounts.authority.key(),
@@ -105,6 +120,13 @@ pub mod bridge_program {
         destination_address_signature: String,
     ) -> Result<()> {
         require_active!(ctx.accounts.bridge_state);
+
+        require!(
+            ctx.accounts.bridge_state.minimum_deposit <= amount
+                && amount <= ctx.accounts.bridge_state.maximum_deposit,
+            Errors::PaymentAmountNotInAcceptedRange
+        );
+
         msg!("amount_sent: {}", amount);
         msg!("destination_address: {}", destination_address);
         msg!(
