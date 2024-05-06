@@ -56,6 +56,7 @@ impl<'info> InitializeContract<'info> {
             vault: self.vault.key(),
             vault_amount: 0u64,
             state: State::Inactive.to_code(),
+            whitelist_state: State::Inactive.to_code(),
             minimum_deposit,
             maximum_deposit,
         });

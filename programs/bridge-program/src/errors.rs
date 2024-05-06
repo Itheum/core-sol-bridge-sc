@@ -6,4 +6,6 @@ pub enum Errors {
     ProgramIsPaused,
     #[msg("Payment amount not in accepted range")]
     PaymentAmountNotInAcceptedRange,
+    #[msg("Not whitelisted")]
+    NotWhitelisted,
 }

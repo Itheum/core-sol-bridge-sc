@@ -4,7 +4,7 @@ use anchor_spl::{
     token::{transfer_checked, Mint, Token, TokenAccount, TransferChecked},
 };
 
-use crate::states::BridgeState;
+use crate::states::{BridgeState, WhitelistEntry};
 
 #[derive(Accounts)]
 #[instruction(amount: u64)]
@@ -23,6 +23,13 @@ pub struct SendToLiquidity<'info> {
         associated_token::authority=bridge_state
     )]
     pub vault: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        seeds=[authority.key().as_ref(), bridge_state.key().as_ref()],
+        bump,
+        constraint=whitelist.whitelist_address==authority.key()
+    )]
+    pub whitelist: Option<Account<'info, WhitelistEntry>>,
 
     #[account(mut)]
     pub authority: Signer<'info>,

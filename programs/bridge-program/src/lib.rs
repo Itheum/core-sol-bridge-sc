@@ -7,11 +7,12 @@ mod errors;
 mod macros;
 mod states;
 use errors::*;
-
 declare_id!("A7c6B6WbfL9bz8bU2Yy24DQrBwzWfED7uZxGhQDu9xNM");
 
 #[program]
 pub mod bridge_program {
+
+    use crate::states::bridge::State;
 
     use super::*;
 
@@ -54,12 +55,28 @@ pub mod bridge_program {
             .set_deposit_limits(minimum_deposit, maximum_deposit)
     }
 
-    pub fn pause(ctx: Context<Pause>) -> Result<()> {
+    pub fn pause(ctx: Context<ContractState>) -> Result<()> {
         ctx.accounts.pause()
     }
 
-    pub fn unpause(ctx: Context<Unpause>) -> Result<()> {
+    pub fn unpause(ctx: Context<ContractState>) -> Result<()> {
         ctx.accounts.unpause()
+    }
+
+    pub fn set_whitelist_active(ctx: Context<WhitelistState>) -> Result<()> {
+        ctx.accounts.set_whitelist_active()
+    }
+
+    pub fn set_whitelist_inactive(ctx: Context<WhitelistState>) -> Result<()> {
+        ctx.accounts.set_whitelist_inactive()
+    }
+
+    pub fn add_to_whitelist(ctx: Context<AddToWhitelist>, address: Pubkey) -> Result<()> {
+        ctx.accounts.add_to_whitelist(address)
+    }
+
+    pub fn remove_from_whitelist(ctx: Context<RemoveFromWhitelist>, address: Pubkey) -> Result<()> {
+        ctx.accounts.remove_from_whitelist(address)
     }
 
     pub fn send_from_liquidity(
@@ -78,6 +95,10 @@ pub mod bridge_program {
         destination_address_signature: String,
     ) -> Result<()> {
         require_active!(ctx.accounts.bridge_state);
+
+        if ctx.accounts.bridge_state.whitelist_state == State::Active.to_code() {
+            require!(ctx.accounts.whitelist.is_some(), Errors::NotWhitelisted);
+        }
 
         require!(
             ctx.accounts.bridge_state.minimum_deposit <= amount
