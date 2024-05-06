@@ -6,7 +6,7 @@ use crate::{
 };
 
 #[derive(Accounts)]
-pub struct Pause<'info> {
+pub struct ContractState<'info> {
     #[account(
         mut,
         seeds=["bridge_state".as_ref()],
@@ -23,9 +23,14 @@ pub struct Pause<'info> {
     system_program: Program<'info, System>,
 }
 
-impl<'info> Pause<'info> {
+impl<'info> ContractState<'info> {
     pub fn pause(&mut self) -> Result<()> {
         self.bridge_state.state = State::Inactive.to_code();
+        Ok(())
+    }
+
+    pub fn unpause(&mut self) -> Result<()> {
+        self.bridge_state.state = State::Active.to_code();
         Ok(())
     }
 }
