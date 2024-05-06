@@ -7,6 +7,8 @@ mod errors;
 mod macros;
 mod states;
 use errors::*;
+mod utils;
+use utils::*;
 declare_id!("A7c6B6WbfL9bz8bU2Yy24DQrBwzWfED7uZxGhQDu9xNM");
 
 #[program]
@@ -95,6 +97,11 @@ pub mod bridge_program {
         destination_address_signature: String,
     ) -> Result<()> {
         require_active!(ctx.accounts.bridge_state);
+
+        require!(
+            check_amount(amount, ctx.accounts.mint_of_token_sent.decimals),
+            Errors::NotWholeNumber
+        );
 
         if ctx.accounts.bridge_state.whitelist_state == State::Active.to_code() {
             require!(ctx.accounts.whitelist.is_some(), Errors::NotWhitelisted);

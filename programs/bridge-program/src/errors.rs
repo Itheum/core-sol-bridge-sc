@@ -8,4 +8,6 @@ pub enum Errors {
     PaymentAmountNotInAcceptedRange,
     #[msg("Not whitelisted")]
     NotWhitelisted,
+    #[msg("Not whole number")]
+    NotWholeNumber,
 }
