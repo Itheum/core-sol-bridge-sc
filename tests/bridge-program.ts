@@ -60,6 +60,8 @@ describe('bridge-program', () => {
 
   const admin = Keypair.fromSecretKey(Uint8Array.from(privateKeys))
 
+  console.log(admin.publicKey.toBase58())
+
   const itheum_token_admin_ata = getAssociatedTokenAddressSync(
     itheum_token_mint.publicKey,
     admin.publicKey
@@ -81,6 +83,12 @@ describe('bridge-program', () => {
 
   const vault_ata = getAssociatedTokenAddressSync(
     itheum_token_mint.publicKey,
+    bridgeStatePda,
+    true
+  )
+
+  const another_token_vault_ata = getAssociatedTokenAddressSync(
+    another_token_mint.publicKey,
     bridgeStatePda,
     true
   )
@@ -259,11 +267,13 @@ describe('bridge-program', () => {
   it('Change whitelist by user (should fail)', async () => {
     try {
       await program.methods
-        .updateWhitelistedMint(another_token_mint.publicKey)
+        .updateWhitelistedMint()
         .signers([user])
         .accounts({
           bridgeState: bridgeStatePda,
           authority: user.publicKey,
+          vault: another_token_vault_ata,
+          mintOfTokenWhitelisted: another_token_mint.publicKey,
         })
         .rpc()
       assert(false, 'Should have thrown error')
@@ -296,11 +306,13 @@ describe('bridge-program', () => {
 
   it('Change whitelist and relayer by admin ', async () => {
     await program.methods
-      .updateWhitelistedMint(itheum_token_mint.publicKey)
+      .updateWhitelistedMint()
       .signers([admin])
       .accounts({
         bridgeState: bridgeStatePda,
         authority: admin.publicKey,
+        vault: vault_ata,
+        mintOfTokenWhitelisted: itheum_token_mint.publicKey,
       })
       .rpc()
 

@@ -9,7 +9,7 @@ mod states;
 use errors::*;
 mod utils;
 use utils::*;
-declare_id!("A7c6B6WbfL9bz8bU2Yy24DQrBwzWfED7uZxGhQDu9xNM");
+declare_id!("83TuR9BMTzDd54iaen7cMhamm73Lj9cVpgrE44ks8Ezr");
 
 #[program]
 pub mod bridge_program {
@@ -32,12 +32,8 @@ pub mod bridge_program {
         ctx.accounts.update_relayer(relayer_pk)
     }
 
-    pub fn update_whitelisted_mint(
-        ctx: Context<UpdateWhitelistedMint>,
-        mint_of_token_whitelisted: Pubkey,
-    ) -> Result<()> {
-        ctx.accounts
-            .update_whitelisted_mint(mint_of_token_whitelisted)
+    pub fn update_whitelisted_mint(ctx: Context<UpdateWhitelistedMint>) -> Result<()> {
+        ctx.accounts.update_whitelisted_mint()
     }
 
     pub fn add_liquidity(ctx: Context<AddLiquidity>, amount: u64) -> Result<()> {
