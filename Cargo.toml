@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "programs/*"
+    "programs/*",
+    'interactions/'
 ]
 
 [profile.release]
