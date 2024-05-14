@@ -162,3 +162,8 @@ Example:
 ```bash
 cargo run -- pause --url https://api.devnet.solana.com --keypair "usb://ledger?key=0"
 ```
+
+To sign and send a transaction using ledger Nano S, do the following:
+
+1. `Allow blind signing` in the ledger settings.
+2. `Pubkey length` set to `Long` in the ledger settings.
