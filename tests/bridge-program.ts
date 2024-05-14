@@ -213,7 +213,7 @@ describe('bridge-program', () => {
   it('Initialize contract by user (should fail)', async () => {
     try {
       await program.methods
-        .initializeBridge(user.publicKey, new anchor.BN(0), new anchor.BN(2))
+        .initializeContract(user.publicKey, new anchor.BN(0), new anchor.BN(2))
         .signers([user])
         .accounts({
           bridgeState: bridgeStatePda,
@@ -233,7 +233,7 @@ describe('bridge-program', () => {
 
   it('Initialize contract by admin', async () => {
     await program.methods
-      .initializeBridge(
+      .initializeContract(
         admin.publicKey,
         new anchor.BN(0),
         new anchor.BN(1000e10)
@@ -670,9 +670,9 @@ describe('bridge-program', () => {
         .rpc()
       assert(false, 'Should have thrown error')
     } catch (err) {
-      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2012)
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6004)
       expect((err as anchor.AnchorError).error.errorMessage).to.equal(
-        'An address constraint was violated'
+        'Not privileged'
       )
     }
   })
@@ -704,9 +704,9 @@ describe('bridge-program', () => {
         .rpc()
       assert(false, 'Should have thrown error')
     } catch (err) {
-      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2012)
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6004)
       expect((err as anchor.AnchorError).error.errorMessage).to.equal(
-        'An address constraint was violated'
+        'Not privileged'
       )
     }
   })
@@ -753,9 +753,9 @@ describe('bridge-program', () => {
         .rpc()
       assert(false, 'Should have thrown error')
     } catch (err) {
-      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2012)
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6004)
       expect((err as anchor.AnchorError).error.errorMessage).to.equal(
-        'An address constraint was violated'
+        'Not privileged'
       )
     }
   })

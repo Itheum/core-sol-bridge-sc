@@ -10,4 +10,6 @@ pub enum Errors {
     NotWhitelisted,
     #[msg("Not whole number")]
     NotWholeNumber,
+    #[msg("Not privileged")]
+    NotPrivileged,
 }

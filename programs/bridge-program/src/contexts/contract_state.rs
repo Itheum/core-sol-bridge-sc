@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 use crate::{
     constants::ADMIN_PUBKEY,
     states::{bridge::State, BridgeState},
+    Errors,
 };
 
 #[derive(Accounts)]
@@ -16,7 +17,7 @@ pub struct ContractState<'info> {
 
     #[account(
         mut,
-        address=ADMIN_PUBKEY,
+    constraint= authority.key() == ADMIN_PUBKEY || authority.key() == bridge_state.relayer_pk.key() @ Errors::NotPrivileged,
     )]
     pub authority: Signer<'info>,
 

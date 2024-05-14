@@ -4,7 +4,7 @@ use anchor_spl::{
     token::{transfer_checked, Mint, Token, TokenAccount, TransferChecked},
 };
 
-use crate::states::BridgeState;
+use crate::{states::BridgeState, Errors};
 
 #[derive(Accounts)]
 #[instruction(amount: u64, receiver: Pubkey)]
@@ -27,7 +27,7 @@ pub struct SendFromLiquidity<'info> {
 
     #[account(
         mut,
-        address=bridge_state.relayer_pk.key()
+        address=bridge_state.relayer_pk.key() @ Errors::NotPrivileged,
     )]
     pub authority: Signer<'info>,
 

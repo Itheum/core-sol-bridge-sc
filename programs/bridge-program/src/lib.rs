@@ -9,7 +9,7 @@ mod states;
 use errors::*;
 mod utils;
 use utils::*;
-declare_id!("83TuR9BMTzDd54iaen7cMhamm73Lj9cVpgrE44ks8Ezr");
+declare_id!("Ajs4D3JKTvD7tFtWCXWcGs7eRWNZpLQB1koPCvw1c9tE");
 
 #[program]
 pub mod bridge_program {
@@ -18,7 +18,7 @@ pub mod bridge_program {
 
     use super::*;
 
-    pub fn initialize_bridge(
+    pub fn initialize_contract(
         ctx: Context<InitializeContract>,
         relayer_pk: Pubkey,
         minimum_deposit: u64,
