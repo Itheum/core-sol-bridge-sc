@@ -19,9 +19,9 @@ pub struct SendFromLiquidity<'info> {
 
     #[account(
         mut,
-        constraint=vault.amount >= amount,
+        constraint=vault.amount >= amount @ Errors::NotEnoughBalance,
         associated_token::mint=mint_of_token_sent,
-        associated_token::authority=bridge_state
+        associated_token::authority=bridge_state 
     )]
     pub vault: Box<Account<'info, TokenAccount>>,
 
@@ -39,8 +39,8 @@ pub struct SendFromLiquidity<'info> {
     #[account(
         mut,
 
-        constraint= receiver_token_account.owner==receiver,
-        constraint=receiver_token_account.mint==bridge_state.mint_of_token_whitelisted.key()
+        constraint= receiver_token_account.owner==receiver @ Errors::OwnerMismatch,
+        constraint=receiver_token_account.mint==bridge_state.mint_of_token_whitelisted.key() @ Errors::MintMismatch,
     )
     ]
     pub receiver_token_account: Account<'info, TokenAccount>,

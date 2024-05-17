@@ -12,4 +12,10 @@ pub enum Errors {
     NotWholeNumber,
     #[msg("Not privileged")]
     NotPrivileged,
+    #[msg("Not enough balance")]
+    NotEnoughBalance,
+    #[msg("Owner mismatch")]
+    OwnerMismatch,
+    #[msg("Mint mismatch")]
+    MintMismatch,
 }

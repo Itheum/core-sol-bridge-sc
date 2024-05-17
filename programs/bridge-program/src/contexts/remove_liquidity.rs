@@ -4,7 +4,7 @@ use anchor_spl::{
     token::{transfer_checked, Mint, Token, TokenAccount, TransferChecked},
 };
 
-use crate::{constants::ADMIN_PUBKEY, states::BridgeState};
+use crate::{constants::ADMIN_PUBKEY, states::BridgeState, Errors};
 
 #[derive(Accounts)]
 #[instruction(amount: u64)]
@@ -19,7 +19,7 @@ pub struct RemoveLiquidity<'info> {
 
     #[account(
         mut,
-        constraint=vault.amount >= amount,
+        constraint=vault.amount >= amount @ Errors::NotEnoughBalance,
         associated_token::mint=mint_of_token_sent,
         associated_token::authority=bridge_state
     )]
@@ -33,13 +33,13 @@ pub struct RemoveLiquidity<'info> {
 
     #[account(
         mut,
-        constraint=mint_of_token_sent.key()==bridge_state.mint_of_token_whitelisted,
+        constraint=mint_of_token_sent.key()==bridge_state.mint_of_token_whitelisted @ Errors::MintMismatch,
     )]
     pub mint_of_token_sent: Account<'info, Mint>,
 
     #[account(mut,
-        constraint=authority_token_account.owner==authority.key(),
-        constraint=authority_token_account.mint==mint_of_token_sent.key(),
+        constraint=authority_token_account.owner==authority.key() @ Errors::OwnerMismatch,
+        constraint=authority_token_account.mint==mint_of_token_sent.key() @ Errors::MintMismatch,
     )]
     pub authority_token_account: Account<'info, TokenAccount>,
 
@@ -54,14 +54,14 @@ impl<'info> RemoveLiquidity<'info> {
 
         self.bridge_state.vault_amount -= amount;
         transfer_checked(
-            self.into_remove_liqudity_context()
+            self.into_remove_liquidity_context()
                 .with_signer(&signer_seeds),
             amount,
             self.mint_of_token_sent.decimals,
         )
     }
 
-    fn into_remove_liqudity_context(
+    fn into_remove_liquidity_context(
         &self,
     ) -> CpiContext<'_, '_, '_, 'info, TransferChecked<'info>> {
         let cpi_accounts = TransferChecked {

@@ -395,9 +395,9 @@ describe('bridge-program', () => {
         .rpc()
       assert(false, 'Should have thrown error')
     } catch (err) {
-      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6007)
       expect((err as anchor.AnchorError).error.errorMessage).to.equal(
-        'A raw constraint was violated'
+        'Mint mismatch'
       )
     }
   })
@@ -417,9 +417,9 @@ describe('bridge-program', () => {
         .rpc()
       assert(false, 'Should have thrown error')
     } catch (err) {
-      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6005)
       expect((err as anchor.AnchorError).error.errorMessage).to.equal(
-        'A raw constraint was violated'
+        'Not enough balance'
       )
     }
   })
@@ -439,9 +439,9 @@ describe('bridge-program', () => {
         .rpc()
       assert(false, 'Should have thrown error')
     } catch (err) {
-      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6005)
       expect((err as anchor.AnchorError).error.errorMessage).to.equal(
-        'A raw constraint was violated'
+        'Not enough balance'
       )
     }
   })
@@ -547,9 +547,9 @@ describe('bridge-program', () => {
         .rpc()
       assert(false, 'Should have thrown error')
     } catch (err) {
-      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6007)
       expect((err as anchor.AnchorError).error.errorMessage).to.equal(
-        'A raw constraint was violated'
+        'Mint mismatch'
       )
     }
   })
@@ -569,9 +569,9 @@ describe('bridge-program', () => {
         .rpc()
       assert(false, 'Should have thrown error')
     } catch (err) {
-      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6006)
       expect((err as anchor.AnchorError).error.errorMessage).to.equal(
-        'A raw constraint was violated'
+        'Owner mismatch'
       )
     }
   })
@@ -591,9 +591,9 @@ describe('bridge-program', () => {
         .rpc()
       assert(false, 'Should have thrown error')
     } catch (err) {
-      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6005)
       expect((err as anchor.AnchorError).error.errorMessage).to.equal(
-        'A raw constraint was violated'
+        'Not enough balance'
       )
     }
   })
@@ -775,9 +775,9 @@ describe('bridge-program', () => {
         .rpc()
       assert(false, 'Should have thrown error')
     } catch (err) {
-      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6005)
       expect((err as anchor.AnchorError).error.errorMessage).to.equal(
-        'A raw constraint was violated'
+        'Not enough balance'
       )
     }
   })
@@ -819,9 +819,9 @@ describe('bridge-program', () => {
         .rpc()
       assert(false, 'Should have thrown error')
     } catch (err) {
-      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6007)
       expect((err as anchor.AnchorError).error.errorMessage).to.equal(
-        'A raw constraint was violated'
+        'Mint mismatch'
       )
     }
   })
@@ -841,9 +841,9 @@ describe('bridge-program', () => {
         .rpc()
       assert(false, 'Should have thrown error')
     } catch (err) {
-      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6006)
       expect((err as anchor.AnchorError).error.errorMessage).to.equal(
-        'A raw constraint was violated'
+        'Owner mismatch'
       )
     }
   })
@@ -968,9 +968,9 @@ describe('bridge-program', () => {
         })
         .rpc()
     } catch (err) {
-      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6005)
       expect((err as anchor.AnchorError).error.errorMessage).to.equal(
-        'A raw constraint was violated'
+        'Not enough balance'
       )
     }
   })
@@ -1012,9 +1012,9 @@ describe('bridge-program', () => {
         })
         .rpc()
     } catch (err) {
-      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6007)
       expect((err as anchor.AnchorError).error.errorMessage).to.equal(
-        'A raw constraint was violated'
+        'Mint mismatch'
       )
     }
   })
@@ -1034,9 +1034,9 @@ describe('bridge-program', () => {
         })
         .rpc()
     } catch (err) {
-      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2003)
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6005)
       expect((err as anchor.AnchorError).error.errorMessage).to.equal(
-        'A raw constraint was violated'
+        'Not enough balance'
       )
     }
   })

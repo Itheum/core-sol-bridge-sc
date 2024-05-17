@@ -4,7 +4,7 @@ use anchor_spl::{
     token::{transfer_checked, Mint, Token, TokenAccount, TransferChecked},
 };
 
-use crate::{constants::ADMIN_PUBKEY, states::BridgeState};
+use crate::{constants::ADMIN_PUBKEY, states::BridgeState, Errors};
 
 #[derive(Accounts)]
 #[instruction(amount: u64)]
@@ -36,9 +36,9 @@ pub struct AddLiquidity<'info> {
     pub mint_of_token_sent: Account<'info, Mint>,
 
     #[account(mut,
-        constraint= authority_token_account.amount >= amount,
-        constraint=authority_token_account.owner==authority.key(),
-        constraint=authority_token_account.mint==mint_of_token_sent.key(),
+        constraint= authority_token_account.amount >= amount @ Errors::NotEnoughBalance,
+        constraint=authority_token_account.owner==authority.key() @ Errors::OwnerMismatch,
+        constraint=authority_token_account.mint==mint_of_token_sent.key() @ Errors::MintMismatch,
     )]
     pub authority_token_account: Account<'info, TokenAccount>,
 

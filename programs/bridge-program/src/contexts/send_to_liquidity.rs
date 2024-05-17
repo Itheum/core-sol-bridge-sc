@@ -4,7 +4,10 @@ use anchor_spl::{
     token::{transfer_checked, Mint, Token, TokenAccount, TransferChecked},
 };
 
-use crate::states::{BridgeState, WhitelistEntry};
+use crate::{
+    states::{BridgeState, WhitelistEntry},
+    Errors,
+};
 
 #[derive(Accounts)]
 #[instruction(amount: u64)]
@@ -41,9 +44,9 @@ pub struct SendToLiquidity<'info> {
 
     #[account(
         mut,
-        constraint=authority_token_account.amount >= amount,
-        constraint=authority_token_account.owner==authority.key(),
-        constraint=authority_token_account.mint==bridge_state.mint_of_token_whitelisted
+        constraint=authority_token_account.amount >= amount @ Errors::NotEnoughBalance,
+        constraint=authority_token_account.owner==authority.key() @ Errors::OwnerMismatch,
+        constraint=authority_token_account.mint==bridge_state.mint_of_token_whitelisted @ Errors::MintMismatch,
     )
     ]
     pub authority_token_account: Account<'info, TokenAccount>,
