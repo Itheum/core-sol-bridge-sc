@@ -134,7 +134,7 @@ USAGE:
 
 OPTIONS:
     -C, --config <PATH>        Configuration file to use [default:
-                               /Users/bucurdavid/.config/solana/cli/config.yml]
+                               /Users/<user>/.config/solana/cli/config.yml]
     -h, --help                 Print help information
         --keypair <KEYPAIR>    Filepath or URL to a keypair [default: client keypair]
     -u, --url <URL>            JSON RPC URL for the cluster [default: value from configuration file]
