@@ -6,7 +6,7 @@ use anchor_spl::{
 
 use crate::{
     constants::ADMIN_PUBKEY,
-    states::{bridge::State, BridgeState}, Errors,
+    states::{bridge::State, BridgeState},
 };
 
 #[derive(Accounts)]
@@ -30,15 +30,6 @@ pub struct InitializeContract<'info> {
     pub vault: Account<'info, TokenAccount>,
 
     pub mint_of_token_whitelisted: Account<'info, Mint>,
-
-    #[account(
-        init_if_needed,
-        payer=authority,
-        space=anchor_spl::token::TokenAccount::LEN, 
-        constraint=fee_collector_token_account.owner == fee_collector @ Errors::OwnerMismatch,   
-        constraint=fee_collector_token_account.mint == spl_token::native_mint::ID @ Errors::MintMismatch,
-    )]
-    pub fee_collector_token_account: Account<'info, TokenAccount>,
 
     #[account(
         mut,

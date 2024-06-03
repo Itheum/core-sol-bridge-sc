@@ -20,4 +20,6 @@ pub enum Errors {
     MintMismatch,
     #[msg("No needed fee accounts provided")]
     NoFeeAccountsProvided,
+    #[msg("Fee collector mismatch")]
+    FeeCollectorMismatch,
 }
