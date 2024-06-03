@@ -11,7 +11,7 @@ bridge_program = "biTbWdTDYmv9ykUoXxFWdNAR38Qwe9HGVWaPJ4hRMk7"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

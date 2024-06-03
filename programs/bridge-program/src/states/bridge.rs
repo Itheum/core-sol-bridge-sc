@@ -16,7 +16,7 @@ pub struct BridgeState {
 }
 
 impl Space for BridgeState {
-    const INIT_SPACE: usize = 8 + 1 + 32 + 32 + 32 + 32 + 8 + 1 + 1 + 8 + 8;
+    const INIT_SPACE: usize = 8 + 1 + 32 + 32 + 32 + 32 + 8 + 1 + 1 + 8 + 8 + 8;
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq)]

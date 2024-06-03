@@ -5,12 +5,15 @@ import {
   createAssociatedTokenAccountIdempotentInstruction,
   createInitializeMint2Instruction,
   createMintToInstruction,
+  createWrappedNativeAccount,
   getAccount,
   getAssociatedTokenAddressSync,
   getMinimumBalanceForRentExemptMint,
   getOrCreateAssociatedTokenAccount,
   MINT_SIZE,
+  NATIVE_MINT,
   TOKEN_PROGRAM_ID,
+  TokenAccountNotFoundError,
 } from '@solana/spl-token'
 import {
   PublicKey,
@@ -35,10 +38,8 @@ describe('bridge-program', () => {
   const PRIVATE_KEY_STR = process.env.PRIVATE_KEY
   const privateKeys = PRIVATE_KEY_STR.split(',').map(Number)
 
-  const [user, user2, itheum_token_mint, another_token_mint] = Array.from(
-    {length: 4},
-    () => Keypair.generate()
-  )
+  const [user, user2, itheum_token_mint, another_token_mint, fee_collector] =
+    Array.from({length: 5}, () => Keypair.generate())
 
   const itheum_token_user_ata = getAssociatedTokenAddressSync(
     itheum_token_mint.publicKey,
@@ -87,11 +88,20 @@ describe('bridge-program', () => {
     true
   )
 
+  const temp_fee_collector = getAssociatedTokenAddressSync(
+    NATIVE_MINT,
+    bridgeStatePda,
+    true
+  )
+
   const another_token_vault_ata = getAssociatedTokenAddressSync(
     another_token_mint.publicKey,
     bridgeStatePda,
     true
   )
+
+  let user_wsol_ata: PublicKey
+  let user2_wsol_ata: PublicKey
 
   const confirm = async (signature: string): Promise<string> => {
     const block = await connection.getLatestBlockhash()
@@ -115,7 +125,7 @@ describe('bridge-program', () => {
 
     let tx2 = new Transaction()
     tx2.instructions = [
-      ...[admin].map((k) =>
+      ...[admin, fee_collector].map((k) =>
         SystemProgram.transfer({
           fromPubkey: provider.publicKey,
           toPubkey: k.publicKey,
@@ -185,6 +195,23 @@ describe('bridge-program', () => {
     ]
 
     await provider.sendAndConfirm(tx, [admin])
+
+    let wrapSol = [user, user2]
+
+    let accounts = await Promise.all(
+      wrapSol.map(async (k) => {
+        const account = await createWrappedNativeAccount(
+          connection,
+          k,
+          k.publicKey,
+          5 * LAMPORTS_PER_SOL
+        )
+        return account
+      })
+    )
+
+    user_wsol_ata = accounts[0]
+    user2_wsol_ata = accounts[1]
   })
 
   it('Send to liquidity by user - bridge state not initialized (should fail)', async () => {
@@ -199,6 +226,10 @@ describe('bridge-program', () => {
           whitelist: null,
           authority: user.publicKey,
           authorityTokenAccount: itheum_token_user_ata,
+          feeCollector: null,
+          mintOfFeeTokenSent: null,
+          authorityFeeTokenAccount: null,
+          tempFeeCollector: null,
         })
         .rpc()
       assert(false, 'Should have thrown error')
@@ -213,7 +244,13 @@ describe('bridge-program', () => {
   it('Initialize contract by user (should fail)', async () => {
     try {
       await program.methods
-        .initializeContract(user.publicKey, new anchor.BN(0), new anchor.BN(2))
+        .initializeContract(
+          user.publicKey,
+          fee_collector.publicKey,
+          new anchor.BN(0),
+          new anchor.BN(0),
+          new anchor.BN(2)
+        )
         .signers([user])
         .accounts({
           bridgeState: bridgeStatePda,
@@ -235,6 +272,8 @@ describe('bridge-program', () => {
     await program.methods
       .initializeContract(
         admin.publicKey,
+        fee_collector.publicKey,
+        new anchor.BN(0),
         new anchor.BN(0),
         new anchor.BN(1000e10)
       )
@@ -934,6 +973,10 @@ describe('bridge-program', () => {
           authority: user.publicKey,
           whitelist: null,
           authorityTokenAccount: itheum_token_user_ata,
+          feeCollector: null,
+          mintOfFeeTokenSent: null,
+          authorityFeeTokenAccount: null,
+          tempFeeCollector: null,
         })
         .rpc()
     } catch (err) {
@@ -965,6 +1008,10 @@ describe('bridge-program', () => {
           mintOfTokenSent: itheum_token_mint.publicKey,
           authority: user.publicKey,
           authorityTokenAccount: itheum_token_user_ata,
+          feeCollector: null,
+          mintOfFeeTokenSent: null,
+          authorityFeeTokenAccount: null,
+          tempFeeCollector: null,
         })
         .rpc()
     } catch (err) {
@@ -987,6 +1034,10 @@ describe('bridge-program', () => {
           mintOfTokenSent: another_token_mint.publicKey,
           authority: user.publicKey,
           authorityTokenAccount: itheum_token_user_ata,
+          feeCollector: null,
+          mintOfFeeTokenSent: null,
+          authorityFeeTokenAccount: null,
+          tempFeeCollector: null,
         })
         .rpc()
     } catch (err) {
@@ -1009,6 +1060,10 @@ describe('bridge-program', () => {
           mintOfTokenSent: itheum_token_mint.publicKey,
           authority: user.publicKey,
           authorityTokenAccount: another_token_user_ata,
+          feeCollector: null,
+          mintOfFeeTokenSent: null,
+          authorityFeeTokenAccount: null,
+          tempFeeCollector: null,
         })
         .rpc()
     } catch (err) {
@@ -1031,6 +1086,10 @@ describe('bridge-program', () => {
           mintOfTokenSent: itheum_token_mint.publicKey,
           authority: user.publicKey,
           authorityTokenAccount: itheum_token_admin_ata,
+          feeCollector: null,
+          mintOfFeeTokenSent: null,
+          authorityFeeTokenAccount: null,
+          tempFeeCollector: null,
         })
         .rpc()
     } catch (err) {
@@ -1070,6 +1129,10 @@ describe('bridge-program', () => {
           mintOfTokenSent: itheum_token_mint.publicKey,
           authority: user.publicKey,
           authorityTokenAccount: itheum_token_user_ata,
+          feeCollector: null,
+          mintOfFeeTokenSent: null,
+          authorityFeeTokenAccount: null,
+          tempFeeCollector: null,
         })
         .rpc()
     } catch (err) {
@@ -1108,6 +1171,10 @@ describe('bridge-program', () => {
         mintOfTokenSent: itheum_token_mint.publicKey,
         authority: user.publicKey,
         authorityTokenAccount: itheum_token_user_ata,
+        feeCollector: null,
+        mintOfFeeTokenSent: null,
+        authorityFeeTokenAccount: null,
+        tempFeeCollector: null,
       })
       .rpc()
 
@@ -1172,6 +1239,10 @@ describe('bridge-program', () => {
           mintOfTokenSent: itheum_token_mint.publicKey,
           authority: user2.publicKey,
           authorityTokenAccount: itheum_token_user2_ata,
+          feeCollector: null,
+          mintOfFeeTokenSent: null,
+          authorityFeeTokenAccount: null,
+          tempFeeCollector: null,
         })
         .rpc()
     } catch (error) {
@@ -1216,6 +1287,10 @@ describe('bridge-program', () => {
           mintOfTokenSent: itheum_token_mint.publicKey,
           authority: user2.publicKey,
           authorityTokenAccount: itheum_token_user2_ata,
+          feeCollector: null,
+          mintOfFeeTokenSent: null,
+          authorityFeeTokenAccount: null,
+          tempFeeCollector: null,
         })
         .rpc()
     } catch (err) {
@@ -1237,6 +1312,10 @@ describe('bridge-program', () => {
         mintOfTokenSent: itheum_token_mint.publicKey,
         authority: user2.publicKey,
         authorityTokenAccount: itheum_token_user2_ata,
+        feeCollector: null,
+        mintOfFeeTokenSent: null,
+        authorityFeeTokenAccount: null,
+        tempFeeCollector: null,
       })
       .rpc()
 
@@ -1335,6 +1414,10 @@ describe('bridge-program', () => {
           mintOfTokenSent: itheum_token_mint.publicKey,
           authority: user2.publicKey,
           authorityTokenAccount: itheum_token_user2_ata,
+          feeCollector: null,
+          mintOfFeeTokenSent: null,
+          authorityFeeTokenAccount: null,
+          tempFeeCollector: null,
         })
         .rpc()
     } catch (err) {
@@ -1369,6 +1452,10 @@ describe('bridge-program', () => {
           mintOfTokenSent: itheum_token_mint.publicKey,
           authority: user2.publicKey,
           authorityTokenAccount: itheum_token_user2_ata,
+          feeCollector: null,
+          mintOfFeeTokenSent: null,
+          authorityFeeTokenAccount: null,
+          tempFeeCollector: null,
         })
         .rpc()
     } catch (err) {
@@ -1390,7 +1477,370 @@ describe('bridge-program', () => {
         mintOfTokenSent: itheum_token_mint.publicKey,
         authority: user2.publicKey,
         authorityTokenAccount: itheum_token_user2_ata,
+        feeCollector: null,
+        mintOfFeeTokenSent: null,
+        authorityFeeTokenAccount: null,
+        tempFeeCollector: null,
       })
       .rpc()
+  })
+
+  it('Set whitelist inactive', async () => {
+    await program.methods
+      .setWhitelistInactive()
+      .signers([admin])
+      .accounts({
+        bridgeState: bridgeStatePda,
+        authority: admin.publicKey,
+      })
+      .rpc()
+
+    let bridgeStateFetch = await program.account.bridgeState.fetch(
+      bridgeStatePda
+    )
+
+    assert(bridgeStateFetch.whitelistState == 0)
+  })
+
+  it('Set fee amount by admin', async () => {
+    await program.methods
+      .setFeeAmount(new anchor.BN(0.1e9))
+      .signers([admin])
+      .accounts({
+        bridgeState: bridgeStatePda,
+        authority: admin.publicKey,
+      })
+      .rpc()
+
+    let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda)
+
+    assert(bridgeState.feeAmount.toNumber() === 0.1e9)
+  })
+
+  it('Set deposit limits by admin', async () => {
+    await program.methods
+      .setDepositLimits(new anchor.BN(10e9), new anchor.BN(1000e9))
+      .signers([admin])
+      .accounts({
+        bridgeState: bridgeStatePda,
+        authority: admin.publicKey,
+      })
+      .rpc()
+
+    let bridgeStateFetch = await program.account.bridgeState.fetch(
+      bridgeStatePda
+    )
+
+    assert(bridgeStateFetch.minimumDeposit.toNumber() == 10e9)
+    assert(bridgeStateFetch.maximumDeposit.toNumber() == 1000e9)
+  })
+
+  it('Send to liquidity by user2 - required fee - missing feeCollector (should fail)', async () => {
+    try {
+      await program.methods
+        .sendToLiquidity(new anchor.BN(100e9), 'erd...', 'signature')
+        .signers([user2])
+        .accounts({
+          bridgeState: bridgeStatePda,
+          vault: vault_ata,
+          whitelist: null,
+          mintOfTokenSent: itheum_token_mint.publicKey,
+          authority: user2.publicKey,
+          authorityTokenAccount: itheum_token_user2_ata,
+          feeCollector: null,
+          mintOfFeeTokenSent: NATIVE_MINT,
+          authorityFeeTokenAccount: user2_wsol_ata,
+          tempFeeCollector: temp_fee_collector,
+        })
+        .rpc()
+    } catch (err) {
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6008)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'Not all fee accounts were provided'
+      )
+    }
+  })
+
+  it('Send to liquidity by user2 - required fee - feeCollector mismatch (should fail)', async () => {
+    try {
+      await program.methods
+        .sendToLiquidity(new anchor.BN(100e9), 'erd...', 'signature')
+        .signers([user2])
+        .accounts({
+          bridgeState: bridgeStatePda,
+          vault: vault_ata,
+          whitelist: null,
+          mintOfTokenSent: itheum_token_mint.publicKey,
+          authority: user2.publicKey,
+          authorityTokenAccount: itheum_token_user2_ata,
+          feeCollector: user2.publicKey,
+          mintOfFeeTokenSent: NATIVE_MINT,
+          authorityFeeTokenAccount: user2_wsol_ata,
+          tempFeeCollector: temp_fee_collector,
+        })
+        .rpc()
+    } catch (err) {
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6009)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'Fee collector mismatch'
+      )
+    }
+  })
+
+  it('Send to liquidity by user2 - required fee - missing mintOfFeeTokenSent (should fail)', async () => {
+    try {
+      await program.methods
+        .sendToLiquidity(new anchor.BN(100e9), 'erd...', 'signature')
+        .signers([user2])
+        .accounts({
+          bridgeState: bridgeStatePda,
+          vault: vault_ata,
+          whitelist: null,
+          mintOfTokenSent: itheum_token_mint.publicKey,
+          authority: user2.publicKey,
+          authorityTokenAccount: itheum_token_user2_ata,
+          feeCollector: fee_collector.publicKey,
+          mintOfFeeTokenSent: null,
+          authorityFeeTokenAccount: user2_wsol_ata,
+          tempFeeCollector: temp_fee_collector,
+        })
+        .rpc()
+    } catch (err) {
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2020)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'A required account for the constraint is None'
+      )
+    }
+  })
+
+  it('Send to liquidity by user2 - required fee - missing authorityFeeTokenAccount (should fail)', async () => {
+    try {
+      await program.methods
+        .sendToLiquidity(new anchor.BN(30e9), 'erd...', 'signature')
+        .signers([user2])
+        .accounts({
+          bridgeState: bridgeStatePda,
+          vault: vault_ata,
+          whitelist: null,
+          mintOfTokenSent: itheum_token_mint.publicKey,
+          authority: user2.publicKey,
+          authorityTokenAccount: itheum_token_user2_ata,
+          feeCollector: fee_collector.publicKey,
+          mintOfFeeTokenSent: NATIVE_MINT,
+          authorityFeeTokenAccount: null,
+          tempFeeCollector: temp_fee_collector,
+        })
+        .rpc()
+    } catch (err) {
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6008)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'Not all fee accounts were provided'
+      )
+    }
+  })
+  it('Set fee amount by admin', async () => {
+    await program.methods
+      .setFeeAmount(new anchor.BN(10e9))
+      .signers([admin])
+      .accounts({
+        bridgeState: bridgeStatePda,
+        authority: admin.publicKey,
+      })
+      .rpc()
+
+    let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda)
+
+    assert(bridgeState.feeAmount.toNumber() === 10e9)
+  })
+
+  it('Send to liquidity by user2 - required fee - authorityFeeTokenAccount mismatch(balance) (should fail)', async () => {
+    try {
+      await program.methods
+        .sendToLiquidity(new anchor.BN(30e9), 'erd...', 'signature')
+        .signers([user2])
+        .accounts({
+          bridgeState: bridgeStatePda,
+          vault: vault_ata,
+          whitelist: null,
+          mintOfTokenSent: itheum_token_mint.publicKey,
+          authority: user2.publicKey,
+          authorityTokenAccount: itheum_token_user2_ata,
+          feeCollector: fee_collector.publicKey,
+          mintOfFeeTokenSent: NATIVE_MINT,
+          authorityFeeTokenAccount: user2_wsol_ata,
+          tempFeeCollector: temp_fee_collector,
+        })
+        .rpc()
+    } catch (err) {
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6005)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'Not enough balance'
+      )
+    }
+  })
+
+  it('Set fee by admin', async () => {
+    await program.methods
+      .setFeeAmount(new anchor.BN(0.1e9))
+      .signers([admin])
+      .accounts({
+        bridgeState: bridgeStatePda,
+        authority: admin.publicKey,
+      })
+      .rpc()
+
+    let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda)
+
+    assert(bridgeState.feeAmount.toNumber() === 0.1e9)
+  })
+
+  it('Send to liquidity by user2 - required fee - authorityFeeTokenAccount mismatch(Owner) (should fail)', async () => {
+    try {
+      await program.methods
+        .sendToLiquidity(new anchor.BN(30e9), 'erd...', 'signature')
+        .signers([user2])
+        .accounts({
+          bridgeState: bridgeStatePda,
+          vault: vault_ata,
+          whitelist: null,
+          mintOfTokenSent: itheum_token_mint.publicKey,
+          authority: user2.publicKey,
+          authorityTokenAccount: itheum_token_user2_ata,
+          feeCollector: fee_collector.publicKey,
+          mintOfFeeTokenSent: NATIVE_MINT,
+          authorityFeeTokenAccount: user_wsol_ata,
+          tempFeeCollector: temp_fee_collector,
+        })
+        .rpc()
+    } catch (err) {
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6006)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'Owner mismatch'
+      )
+    }
+  })
+
+  it('Send to liquidity by user2 - required fee - authorityFeeTokenAccount mismatch(Mint) (should fail)', async () => {
+    try {
+      await program.methods
+        .sendToLiquidity(new anchor.BN(30e9), 'erd...', 'signature')
+        .signers([user2])
+        .accounts({
+          bridgeState: bridgeStatePda,
+          vault: vault_ata,
+          whitelist: null,
+          mintOfTokenSent: itheum_token_mint.publicKey,
+          authority: user2.publicKey,
+          authorityTokenAccount: itheum_token_user2_ata,
+          feeCollector: fee_collector.publicKey,
+          mintOfFeeTokenSent: NATIVE_MINT,
+          authorityFeeTokenAccount: another_token_user2_ata,
+          tempFeeCollector: temp_fee_collector,
+        })
+        .rpc()
+    } catch (err) {
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6007)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'Mint mismatch'
+      )
+    }
+  })
+
+  it('Send to liquidity by user2 - required fee - missing tempFeeCollector (should fail)', async () => {
+    try {
+      await program.methods
+        .sendToLiquidity(new anchor.BN(30e9), 'erd...', 'signature')
+        .signers([user2])
+        .accounts({
+          bridgeState: bridgeStatePda,
+          vault: vault_ata,
+          whitelist: null,
+          mintOfTokenSent: itheum_token_mint.publicKey,
+          authority: user2.publicKey,
+          authorityTokenAccount: itheum_token_user2_ata,
+          feeCollector: fee_collector.publicKey,
+          mintOfFeeTokenSent: NATIVE_MINT,
+          authorityFeeTokenAccount: user2_wsol_ata,
+          tempFeeCollector: null,
+        })
+        .rpc()
+    } catch (err) {
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6008)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'Not all fee accounts were provided'
+      )
+    }
+  })
+
+  it('Send to liquidity by user2 - required fee - tempFeeCollector mismatch(Mint) (should fail)', async () => {
+    try {
+      await program.methods
+        .sendToLiquidity(new anchor.BN(30e9), 'erd...', 'signature')
+        .signers([user2])
+        .accounts({
+          bridgeState: bridgeStatePda,
+          vault: vault_ata,
+          whitelist: null,
+          mintOfTokenSent: itheum_token_mint.publicKey,
+          authority: user2.publicKey,
+          authorityTokenAccount: itheum_token_user2_ata,
+          feeCollector: fee_collector.publicKey,
+          mintOfFeeTokenSent: NATIVE_MINT,
+          authorityFeeTokenAccount: user2_wsol_ata,
+          tempFeeCollector: vault_ata,
+        })
+        .rpc()
+    } catch (err) {
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2014)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'A token mint constraint was violated'
+      )
+    }
+  })
+
+  it('Send to liquidity by user2 - required fee ', async () => {
+    await program.methods
+      .sendToLiquidity(new anchor.BN(150e9), 'erd...', 'signature')
+      .signers([user2])
+      .accounts({
+        bridgeState: bridgeStatePda,
+        vault: vault_ata,
+        whitelist: null,
+        mintOfTokenSent: itheum_token_mint.publicKey,
+        authority: user2.publicKey,
+        authorityTokenAccount: itheum_token_user2_ata,
+        feeCollector: fee_collector.publicKey,
+        mintOfFeeTokenSent: NATIVE_MINT,
+        authorityFeeTokenAccount: user2_wsol_ata,
+        tempFeeCollector: temp_fee_collector,
+      })
+      .rpc()
+
+    try {
+      await getAccount(connection, temp_fee_collector)
+    } catch (err) {
+      if (err instanceof TokenAccountNotFoundError) {
+        assert(true)
+      }
+    }
+
+    let fee_collector_account_balance = await connection.getBalance(
+      fee_collector.publicKey
+    )
+
+    const rentExemptBalance =
+      await connection.getMinimumBalanceForRentExemption(165) // default for TokenAccount
+
+    const expected_balance = rentExemptBalance + 10.1e9 // 10e9 initial balance + 0.1e9 fee + rentExempt
+
+    assert(fee_collector_account_balance == expected_balance)
+
+    let user2Ata = await getAccount(connection, itheum_token_user2_ata)
+
+    assert(Number(user2Ata.amount) == 0e9)
+
+    let bridge = await program.account.bridgeState.fetch(bridgeStatePda)
+
+    assert(bridge.vaultAmount.toNumber() == 1200e9)
   })
 })

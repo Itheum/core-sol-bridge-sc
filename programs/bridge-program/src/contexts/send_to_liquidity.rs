@@ -72,8 +72,6 @@ pub struct SendToLiquidity<'info> {
     )]
     pub fee_collector: Option<SystemAccount<'info>>,
 
-    pub program_data: Account<'info, ProgramData>,
-
     #[account(mut,
         constraint=authority_fee_token_account.amount >= bridge_state.fee_amount @ Errors::NotEnoughBalance,
         constraint=authority_fee_token_account.owner==authority.key() @ Errors::OwnerMismatch,
@@ -148,7 +146,7 @@ impl<'info> SendToLiquidity<'info> {
         let cpi_accounts = CloseAccount {
             account: self.temp_fee_collector.as_ref().unwrap().to_account_info(),
             destination: self.fee_collector.as_ref().unwrap().to_account_info(),
-            authority: self.authority.to_account_info(),
+            authority: self.bridge_state.to_account_info(),
         };
         CpiContext::new(self.token_program.to_account_info(), cpi_accounts)
     }

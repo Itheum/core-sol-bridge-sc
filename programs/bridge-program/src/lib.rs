@@ -53,12 +53,16 @@ pub mod bridge_program {
     }
 
     pub fn set_deposit_limits(
-        ctx: Context<DepositLimits>,
+        ctx: Context<UpdateLimitsOrFee>,
         minimum_deposit: u64,
         maximum_deposit: u64,
     ) -> Result<()> {
         ctx.accounts
             .set_deposit_limits(minimum_deposit, maximum_deposit)
+    }
+
+    pub fn set_fee_amount(ctx: Context<UpdateLimitsOrFee>, fee_amount: u64) -> Result<()> {
+        ctx.accounts.set_fee_amount(fee_amount)
     }
 
     pub fn pause(ctx: Context<ContractState>) -> Result<()> {
