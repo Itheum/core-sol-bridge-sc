@@ -18,4 +18,6 @@ pub enum Errors {
     OwnerMismatch,
     #[msg("Mint mismatch")]
     MintMismatch,
+    #[msg("No needed fee accounts provided")]
+    NoFeeAccountsProvided,
 }

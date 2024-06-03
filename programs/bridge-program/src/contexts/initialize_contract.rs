@@ -6,10 +6,11 @@ use anchor_spl::{
 
 use crate::{
     constants::ADMIN_PUBKEY,
-    states::{bridge::State, BridgeState},
+    states::{bridge::State, BridgeState}, Errors,
 };
 
 #[derive(Accounts)]
+#[instruction(_relayer_pk: Pubkey, fee_collector:Pubkey)]
 pub struct InitializeContract<'info> {
     #[account(
         init,
@@ -31,6 +32,15 @@ pub struct InitializeContract<'info> {
     pub mint_of_token_whitelisted: Account<'info, Mint>,
 
     #[account(
+        init_if_needed,
+        payer=authority,
+        space=anchor_spl::token::TokenAccount::LEN, 
+        constraint=fee_collector_token_account.owner == fee_collector @ Errors::OwnerMismatch,   
+        constraint=fee_collector_token_account.mint == spl_token::native_mint::ID @ Errors::MintMismatch,
+    )]
+    pub fee_collector_token_account: Account<'info, TokenAccount>,
+
+    #[account(
         mut,
         address=ADMIN_PUBKEY,
     )]
@@ -46,6 +56,8 @@ impl<'info> InitializeContract<'info> {
         &mut self,
         bumps: &InitializeContractBumps,
         relayer_pk: Pubkey,
+        fee_collector: Pubkey,
+        fee_amount: u64,
         minimum_deposit: u64,
         maximum_deposit: u64,
     ) -> Result<()> {
@@ -54,11 +66,13 @@ impl<'info> InitializeContract<'info> {
             mint_of_token_whitelisted: self.mint_of_token_whitelisted.key(),
             relayer_pk,
             vault: self.vault.key(),
+            fee_collector,
             vault_amount: 0u64,
             state: State::Inactive.to_code(),
             whitelist_state: State::Inactive.to_code(),
             minimum_deposit,
             maximum_deposit,
+            fee_amount,
         });
 
         Ok(())

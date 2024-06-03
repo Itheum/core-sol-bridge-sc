@@ -49,7 +49,28 @@ pub struct SendToLiquidity<'info> {
         constraint=authority_token_account.mint==bridge_state.mint_of_token_whitelisted @ Errors::MintMismatch,
     )
     ]
-    pub authority_token_account: Account<'info, TokenAccount>,
+    pub authority_token_account: Box<Account<'info, TokenAccount>>,
+
+
+    #[account(
+        constraint=mint_of_fee_token_sent.key()==spl_token::native_mint::ID @ Errors::MintMismatch,
+    )]
+    pub mint_of_fee_token_sent: Option<Account<'info, Mint>>,
+
+    #[account(mut,
+        constraint=authority_fee_token_account.amount >= bridge_state.fee_amount @ Errors::NotEnoughBalance,
+        constraint=authority_fee_token_account.owner==authority.key() @ Errors::OwnerMismatch,
+        constraint=authority_fee_token_account.mint==spl_token::native_mint::ID @ Errors::MintMismatch,
+    )]
+    pub authority_fee_token_account: Option<Account<'info, TokenAccount>>,
+
+
+    #[account(
+        mut,
+        constraint=fee_collector_token_account.owner == bridge_state.fee_collector @ Errors::OwnerMismatch,   
+        constraint=fee_collector_token_account.mint == spl_token::native_mint::ID @ Errors::MintMismatch,
+    )]
+    pub fee_collector_token_account: Option<Account<'info, TokenAccount>>,
 
     system_program: Program<'info, System>,
     token_program: Program<'info, Token>,
@@ -59,6 +80,10 @@ pub struct SendToLiquidity<'info> {
 impl<'info> SendToLiquidity<'info> {
     pub fn send_to_liquidity(&mut self, amount: u64) -> Result<()> {
         self.bridge_state.vault_amount += amount;
+
+        if self.bridge_state.fee_amount > 0 {
+        transfer_checked(self.into_send_fee_context(), self.bridge_state.fee_amount, self.mint_of_fee_token_sent.as_ref().unwrap().decimals)?;
+        }
 
         transfer_checked(
             self.into_send_to_liquidity_context(),
@@ -74,6 +99,18 @@ impl<'info> SendToLiquidity<'info> {
             from: self.authority_token_account.to_account_info(),
             to: self.vault.to_account_info(),
             mint: self.mint_of_token_sent.to_account_info(),
+            authority: self.authority.to_account_info(),
+        };
+        CpiContext::new(self.token_program.to_account_info(), cpi_accounts)
+    }
+
+    fn into_send_fee_context(&self) -> CpiContext<'_, '_, '_, 'info, TransferChecked<'info>> {
+        let cpi_accounts = TransferChecked {
+            from: self
+                .authority_fee_token_account.as_ref().
+                unwrap().to_account_info(),
+            to: self.fee_collector_token_account.as_ref().unwrap().to_account_info(),
+            mint:self.mint_of_fee_token_sent.as_ref().unwrap().to_account_info(),
             authority: self.authority.to_account_info(),
         };
         CpiContext::new(self.token_program.to_account_info(), cpi_accounts)

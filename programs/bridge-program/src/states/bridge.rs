@@ -6,15 +6,17 @@ pub struct BridgeState {
     pub mint_of_token_whitelisted: Pubkey,
     pub relayer_pk: Pubkey,
     pub vault: Pubkey,
+    pub fee_collector: Pubkey,
     pub vault_amount: u64,
     pub state: u8,
     pub whitelist_state: u8,
     pub minimum_deposit: u64,
     pub maximum_deposit: u64,
+    pub fee_amount: u64,
 }
 
 impl Space for BridgeState {
-    const INIT_SPACE: usize = 8 + 1 + 32 + 32 + 32 + 8 + 1 + 1 + 8 + 8;
+    const INIT_SPACE: usize = 8 + 1 + 32 + 32 + 32 + 32 + 8 + 1 + 1 + 8 + 8;
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq)]

@@ -9,7 +9,7 @@ mod states;
 use errors::*;
 mod utils;
 use utils::*;
-declare_id!("Ajs4D3JKTvD7tFtWCXWcGs7eRWNZpLQB1koPCvw1c9tE");
+declare_id!("biTbWdTDYmv9ykUoXxFWdNAR38Qwe9HGVWaPJ4hRMk7");
 
 #[program]
 pub mod bridge_program {
@@ -21,11 +21,19 @@ pub mod bridge_program {
     pub fn initialize_contract(
         ctx: Context<InitializeContract>,
         relayer_pk: Pubkey,
+        fee_collector: Pubkey,
+        fee_amount: u64,
         minimum_deposit: u64,
         maximum_deposit: u64,
     ) -> Result<()> {
-        ctx.accounts
-            .initialize_contract(&ctx.bumps, relayer_pk, minimum_deposit, maximum_deposit)
+        ctx.accounts.initialize_contract(
+            &ctx.bumps,
+            relayer_pk,
+            fee_collector,
+            fee_amount,
+            minimum_deposit,
+            maximum_deposit,
+        )
     }
 
     pub fn update_relayer(ctx: Context<UpdateRelayer>, relayer_pk: Pubkey) -> Result<()> {
@@ -101,6 +109,15 @@ pub mod bridge_program {
 
         if ctx.accounts.bridge_state.whitelist_state == State::Active.to_code() {
             require!(ctx.accounts.whitelist.is_some(), Errors::NotWhitelisted);
+        }
+
+        if ctx.accounts.bridge_state.fee_amount > 0 {
+            require!(
+                ctx.accounts.authority_fee_token_account.is_some()
+                    && ctx.accounts.fee_collector_token_account.is_some()
+                    && ctx.accounts.mint_of_fee_token_sent.is_some(),
+                Errors::NoFeeAccountsProvided
+            );
         }
 
         require!(
