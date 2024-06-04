@@ -35,7 +35,7 @@ describe('bridge-program', () => {
 
   const connection = provider.connection
 
-  const PRIVATE_KEY_STR = process.env.PRIVATE_KEY
+  const PRIVATE_KEY_STR = process.env.UNIT_TEST_PRIVATE_KEY
   const privateKeys = PRIVATE_KEY_STR.split(',').map(Number)
 
   const [user, user2, itheum_token_mint, another_token_mint, fee_collector] =

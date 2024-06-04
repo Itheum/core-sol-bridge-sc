@@ -1,3 +1,38 @@
+## Bridge Program
+
+### Abstract
+
+In this repository you will find the bridge program on the Solana side for MultiversX <-> Solana bridge.
+The main purpose is to allow users to deposit and lock tokens inside the program liquidity. The relayer service is responsible for the transfer of the tokens between the two blockchains, using bridge liquidity smart contracts on both sides.
+
+### Overview
+
+The bridge program can be directly controlled by an administrator account. The administrator account can perform the following actions:
+
+- Initialize the contract
+- Change fee amount
+- Change the deposit limits
+- Activate/deactivate the program
+- Change the relayer address
+- Change the whitelisted token
+- Activate/Deactivate a user whitelist
+- Add/Remove a user from the whitelist
+- Add/Remove liquidity
+
+The administrator account is a constant address defined in the `constants.rs` file. There are some workarounds or other solutions to restrict the access of an endpoint to the administrator account, but are more error-prone, so we decided to use a simple solution, a constant address.
+
+The whitelisted relayer address which is stored in the bridge state account is used to restrict the `sendFromLiquidity` endpoint to the relayer address.
+
+### Folder structure
+
+- `programs` - contains the bridge program
+- `src` - contains all the source code
+- `src/contexts` - contains the program contexts for each endpoint
+- `src/states` - contains the program states accounts
+- `src/constants` - contains the program constants
+- `src/errors` - contains the program custom errors
+- `src/lib` - contains the program endpoints
+
 ## Install, Build, Deploy and Test
 
 Let's run the test once to see what happens.
@@ -103,7 +138,7 @@ To test against localnet, update the `cluster` section in `Anchor.toml`:
 cluster = "localnet"
 ```
 
-Because the program needs a constant admin address, the tests will use the PRIVATE_KEY stored in the `.env` file. This key is used to sign transactions in the tests.
+Because the program needs a constant admin address, the tests will use the UNIT_TEST_PRIVATE_KEY stored in the `.env` file. This key is used to sign transactions in the tests.
 Copy the content from `env.copy` to `.env`.
 
 ```
