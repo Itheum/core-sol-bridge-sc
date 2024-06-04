@@ -138,8 +138,8 @@ To test against localnet, update the `cluster` section in `Anchor.toml`:
 cluster = "localnet"
 ```
 
-Because the program needs a constant admin address, the tests will use the UNIT_TEST_PRIVATE_KEY stored in the `.env` file. This key is used to sign transactions in the tests.
-Copy the content from `env.copy` to `.env`.
+Because the program needs a constant admin address, the tests will use the `UNIT_TEST_PRIVATE_KEY` stored in the `.env` file. This key is used to sign transactions in the tests.
+Copy the content from `env.copy` to `.env`. Copy the `UNIT_TEST_PUBLIC_KEY` from the `env.copy` to the `constants.rs` file where the `ADMIN_PUBKEY` constant is defined.
 
 ```
 $ anchor test
