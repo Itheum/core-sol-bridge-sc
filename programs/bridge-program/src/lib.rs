@@ -9,7 +9,7 @@ mod states;
 use errors::*;
 mod utils;
 use utils::*;
-declare_id!("Ajs4D3JKTvD7tFtWCXWcGs7eRWNZpLQB1koPCvw1c9tE");
+declare_id!("biTbWdTDYmv9ykUoXxFWdNAR38Qwe9HGVWaPJ4hRMk7");
 
 #[program]
 pub mod bridge_program {
@@ -20,16 +20,24 @@ pub mod bridge_program {
 
     pub fn initialize_contract(
         ctx: Context<InitializeContract>,
-        relayer_pk: Pubkey,
+        relayer_pubkey: Pubkey,
+        fee_collector: Pubkey,
+        fee_amount: u64,
         minimum_deposit: u64,
         maximum_deposit: u64,
     ) -> Result<()> {
-        ctx.accounts
-            .initialize_contract(&ctx.bumps, relayer_pk, minimum_deposit, maximum_deposit)
+        ctx.accounts.initialize_contract(
+            &ctx.bumps,
+            relayer_pubkey,
+            fee_collector,
+            fee_amount,
+            minimum_deposit,
+            maximum_deposit,
+        )
     }
 
-    pub fn update_relayer(ctx: Context<UpdateRelayer>, relayer_pk: Pubkey) -> Result<()> {
-        ctx.accounts.update_relayer(relayer_pk)
+    pub fn update_relayer(ctx: Context<UpdateRelayer>, relayer_pubkey: Pubkey) -> Result<()> {
+        ctx.accounts.update_relayer(relayer_pubkey)
     }
 
     pub fn update_whitelisted_mint(ctx: Context<UpdateWhitelistedMint>) -> Result<()> {
@@ -45,12 +53,16 @@ pub mod bridge_program {
     }
 
     pub fn set_deposit_limits(
-        ctx: Context<DepositLimits>,
+        ctx: Context<UpdateLimitsOrFee>,
         minimum_deposit: u64,
         maximum_deposit: u64,
     ) -> Result<()> {
         ctx.accounts
             .set_deposit_limits(minimum_deposit, maximum_deposit)
+    }
+
+    pub fn set_fee_amount(ctx: Context<UpdateLimitsOrFee>, fee_amount: u64) -> Result<()> {
+        ctx.accounts.set_fee_amount(fee_amount)
     }
 
     pub fn pause(ctx: Context<ContractState>) -> Result<()> {
@@ -101,6 +113,16 @@ pub mod bridge_program {
 
         if ctx.accounts.bridge_state.whitelist_state == State::Active.to_code() {
             require!(ctx.accounts.whitelist.is_some(), Errors::NotWhitelisted);
+        }
+
+        if ctx.accounts.bridge_state.fee_amount > 0 {
+            require!(
+                ctx.accounts.authority_fee_token_account.is_some()
+                    && ctx.accounts.temp_fee_collector.is_some()
+                    && ctx.accounts.fee_collector.is_some()
+                    && ctx.accounts.mint_of_fee_token_sent.is_some(),
+                Errors::NoFeeAccountsProvided
+            );
         }
 
         require!(

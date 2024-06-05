@@ -7,14 +7,14 @@ publish = false
 [dependencies]
 clap = { version = "3", features = ["cargo"] }
 futures-util = "0.3.19"
-solana-clap-v3-utils = "=1.17.3"
-solana-cli-config = "=1.17.3"
-solana-client = "=1.17.3"
-solana-logger = "=1.17.3"
-solana-remote-wallet = "=1.17.3"
-solana-sdk = "=1.17.3"
-solana-frozen-abi= "=1.17.3"
-solana-program= "=1.17.3"
+solana-clap-v3-utils = "=1.18.2"
+solana-cli-config = "=1.18.2"
+solana-client = "=1.18.2"
+solana-logger = "=1.18.2"
+solana-remote-wallet = "=1.18.2"
+solana-sdk = "=1.18.2"
+solana-frozen-abi= "=1.18.2"
+solana-program= "=1.18.2"
 spl-token = "4.0.0"
 spl-associated-token-account = "2.0.0"
 tokio = { version = "1", features = ["full"] }
