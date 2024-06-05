@@ -27,7 +27,7 @@ pub struct SendFromLiquidity<'info> {
 
     #[account(
         mut,
-        address=bridge_state.relayer_pk.key() @ Errors::NotPrivileged,
+        address=bridge_state.relayer_pubkey.key() @ Errors::NotPrivileged,
     )]
     pub authority: Signer<'info>,
 

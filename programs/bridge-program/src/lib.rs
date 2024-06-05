@@ -20,7 +20,7 @@ pub mod bridge_program {
 
     pub fn initialize_contract(
         ctx: Context<InitializeContract>,
-        relayer_pk: Pubkey,
+        relayer_pubkey: Pubkey,
         fee_collector: Pubkey,
         fee_amount: u64,
         minimum_deposit: u64,
@@ -28,7 +28,7 @@ pub mod bridge_program {
     ) -> Result<()> {
         ctx.accounts.initialize_contract(
             &ctx.bumps,
-            relayer_pk,
+            relayer_pubkey,
             fee_collector,
             fee_amount,
             minimum_deposit,
@@ -36,8 +36,8 @@ pub mod bridge_program {
         )
     }
 
-    pub fn update_relayer(ctx: Context<UpdateRelayer>, relayer_pk: Pubkey) -> Result<()> {
-        ctx.accounts.update_relayer(relayer_pk)
+    pub fn update_relayer(ctx: Context<UpdateRelayer>, relayer_pubkey: Pubkey) -> Result<()> {
+        ctx.accounts.update_relayer(relayer_pubkey)
     }
 
     pub fn update_whitelisted_mint(ctx: Context<UpdateWhitelistedMint>) -> Result<()> {

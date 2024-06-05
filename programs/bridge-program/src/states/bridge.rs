@@ -4,7 +4,7 @@ use anchor_lang::prelude::*;
 pub struct BridgeState {
     pub bump: u8,
     pub mint_of_token_whitelisted: Pubkey,
-    pub relayer_pk: Pubkey,
+    pub relayer_pubkey: Pubkey,
     pub vault: Pubkey,
     pub fee_collector: Pubkey,
     pub vault_amount: u64,

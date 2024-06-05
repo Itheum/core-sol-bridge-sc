@@ -289,7 +289,7 @@ describe('bridge-program', () => {
     let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda)
 
     assert(bridgeState.state === 0)
-    assert(bridgeState.relayerPk.equals(admin.publicKey))
+    assert(bridgeState.relayerPubkey.equals(admin.publicKey))
     assert(bridgeState.vault.equals(vault_ata))
     assert(bridgeState.vaultAmount.toNumber() === 0)
     assert(
@@ -366,7 +366,7 @@ describe('bridge-program', () => {
 
     let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda)
 
-    assert(bridgeState.relayerPk.equals(admin.publicKey))
+    assert(bridgeState.relayerPubkey.equals(admin.publicKey))
     assert(bridgeState.vault.equals(vault_ata))
     assert(bridgeState.vaultAmount.toNumber() === 0)
     assert(
@@ -500,7 +500,7 @@ describe('bridge-program', () => {
 
     let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda)
 
-    assert(bridgeState.relayerPk.equals(admin.publicKey))
+    assert(bridgeState.relayerPubkey.equals(admin.publicKey))
     assert(bridgeState.vault.equals(vault_ata))
     assert(bridgeState.vaultAmount.toNumber() === 1000e9)
     assert(
@@ -536,7 +536,7 @@ describe('bridge-program', () => {
 
     let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda)
 
-    assert(bridgeState.relayerPk.equals(admin.publicKey))
+    assert(bridgeState.relayerPubkey.equals(admin.publicKey))
     assert(bridgeState.vault.equals(vault_ata))
     assert(bridgeState.vaultAmount.toNumber() === 1000e9)
     assert(
@@ -652,7 +652,7 @@ describe('bridge-program', () => {
 
     let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda)
 
-    assert(bridgeState.relayerPk.equals(admin.publicKey))
+    assert(bridgeState.relayerPubkey.equals(admin.publicKey))
     assert(bridgeState.vault.equals(vault_ata))
     assert(bridgeState.vaultAmount.toNumber() === 500e9)
     assert(
@@ -680,7 +680,7 @@ describe('bridge-program', () => {
 
     let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda)
 
-    assert(bridgeState.relayerPk.equals(admin.publicKey))
+    assert(bridgeState.relayerPubkey.equals(admin.publicKey))
     assert(bridgeState.vault.equals(vault_ata))
     assert(bridgeState.vaultAmount.toNumber() === 0)
     assert(

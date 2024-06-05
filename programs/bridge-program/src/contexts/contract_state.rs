@@ -17,7 +17,7 @@ pub struct ContractState<'info> {
 
     #[account(
         mut,
-    constraint= authority.key() == ADMIN_PUBKEY || authority.key() == bridge_state.relayer_pk.key() @ Errors::NotPrivileged,
+    constraint= authority.key() == ADMIN_PUBKEY || authority.key() == bridge_state.relayer_pubkey.key() @ Errors::NotPrivileged,
     )]
     pub authority: Signer<'info>,
 

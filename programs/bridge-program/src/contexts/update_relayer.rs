@@ -21,8 +21,8 @@ pub struct UpdateRelayer<'info> {
 }
 
 impl<'info> UpdateRelayer<'info> {
-    pub fn update_relayer(&mut self, relayer_pk: Pubkey) -> Result<()> {
-        self.bridge_state.relayer_pk = relayer_pk;
+    pub fn update_relayer(&mut self, relayer_pubkey: Pubkey) -> Result<()> {
+        self.bridge_state.relayer_pubkey = relayer_pubkey;
         Ok(())
     }
 }
