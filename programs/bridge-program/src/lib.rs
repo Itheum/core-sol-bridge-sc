@@ -8,7 +8,7 @@ mod states;
 use errors::*;
 mod utils;
 use utils::*;
-declare_id!("biTbWdTDYmv9ykUoXxFWdNAR38Qwe9HGVWaPJ4hRMk7");
+declare_id!("bitH2bkiBmbcio1riko9qLhkgKdAtY4BEx61ZQuvrfj");
 
 #[program]
 pub mod bridge_program {
