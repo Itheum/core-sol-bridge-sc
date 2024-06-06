@@ -1,8 +1,9 @@
 use crate::admin_endpoints::{
     process_add_liquidity, process_add_to_whitelist, process_initialize_contract,
-    process_pause_contract, process_remove_from_whitelist, process_remove_liquidity,
+    process_public_pause_contract, process_public_unpause_contract, process_relayer_pause,
+    process_relayer_unpause, process_remove_from_whitelist, process_remove_liquidity,
     process_set_deposit_limits, process_set_whitelist_active, process_set_whitelist_inactive,
-    process_unpause_contract, process_update_relayer, process_update_whitelisted_mint,
+    process_update_relayer, process_update_whitelisted_mint,
 };
 use anchor_client::solana_sdk::signature::Signer;
 
@@ -87,6 +88,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .value_name("RELAYER_PK")
                         .takes_value(true)
                         .help("Relayer public key"),
+                )
+                .arg(
+                    Arg::new("fee_collector_pk")
+                        .required(true)
+                        .value_name("FEE_COLLECTOR_PK")
+                        .takes_value(true)
+                        .help("Fee collector public key"),
+                )
+                .arg(
+                    Arg::new("fee_amount")
+                        .required(true)
+                        .value_name("FEE_AMOUNT")
+                        .takes_value(true)
+                        .help("Fee amount"),
                 )
                 .arg(
                     Arg::new("minimum_deposit")
@@ -184,8 +199,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .help("Maximum deposit"),
                 ),
         )
-        .subcommand(Command::new("pause").about("Send a pause transaction"))
-        .subcommand(Command::new("unpause").about("Send a unpause transaction"))
+        .subcommand(Command::new("publicPause").about("Send a pause transaction"))
+        .subcommand(Command::new("publicUnpause").about("Send a unpause transaction"))
+        .subcommand(Command::new("relayerPause").about("Send a relayer pause transaction"))
+        .subcommand(Command::new("relayerUnpause").about("Send a relayer unpause transaction"))
         .subcommand(
             Command::new("setWhitelistActive").about("Send a set whitelist active transaction"),
         )
@@ -268,6 +285,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match (command, matches) {
         ("initializeContract", arg_matches) => {
             let relayer_pk = pubkey_of(arg_matches, "relayer_pk").unwrap();
+            let fee_collector = pubkey_of(arg_matches, "fee_collector_pk").unwrap();
 
             let mint_of_token_whitelisted =
                 pubkey_of(arg_matches, "mint_of_token_whitelisted").unwrap();
@@ -276,14 +294,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let maximum_deposit = arg_matches.get_one::<String>("maximum_deposit").unwrap();
 
+            let fee_amount = arg_matches.get_one::<String>("fee_amount").unwrap();
+
             let signature = process_initialize_contract(
                 &rpc_client,
                 config.default_signer.as_ref(),
                 bridge_program::ID,
                 relayer_pk,
+                fee_collector,
                 mint_of_token_whitelisted,
                 minimum_deposit.parse::<u64>().unwrap(),
                 maximum_deposit.parse::<u64>().unwrap(),
+                fee_amount.parse::<u64>().unwrap(),
             )
             .await
             .unwrap_or_else(|err| {
@@ -385,8 +407,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             println!("Signature: {signature}");
         }
-        ("pause", _arg_matches) => {
-            let signature = process_pause_contract(
+        ("publicPause", _arg_matches) => {
+            let signature = process_public_pause_contract(
                 &rpc_client,
                 config.default_signer.as_ref(),
                 bridge_program::ID,
@@ -399,8 +421,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             println!("Signature: {signature}");
         }
-        ("unpause", _arg_matches) => {
-            let signature = process_unpause_contract(
+        ("publicUnpause", _arg_matches) => {
+            let signature = process_public_unpause_contract(
                 &rpc_client,
                 config.default_signer.as_ref(),
                 bridge_program::ID,
@@ -413,6 +435,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             println!("Signature: {signature}");
         }
+        ("relayerPause", _arg_matches) => {
+            let signature = process_relayer_pause(
+                &rpc_client,
+                config.default_signer.as_ref(),
+                bridge_program::ID,
+            )
+            .await
+            .unwrap_or_else(|err| {
+                eprintln!("error: send transaction: {err}");
+                exit(1);
+            });
+
+            println!("Signature: {signature}");
+        }
+        ("relayerUnpause", _arg_matches) => {
+            let signature = process_relayer_unpause(
+                &rpc_client,
+                config.default_signer.as_ref(),
+                bridge_program::ID,
+            )
+            .await
+            .unwrap_or_else(|err| {
+                eprintln!("error: send transaction: {err}");
+                exit(1);
+            });
+
+            println!("Signature: {signature}");
+        }
+
         ("setWhitelistActive", _arg_matches) => {
             let signature = process_set_whitelist_active(
                 &rpc_client,

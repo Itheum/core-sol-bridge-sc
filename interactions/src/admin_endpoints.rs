@@ -22,10 +22,12 @@ pub async fn process_initialize_contract(
     rpc_client: &RpcClient,
     signer: &dyn Signer,
     program_id: Pubkey,
-    relayer_pk: Pubkey,
+    relayer_pubkey: Pubkey,
+    fee_collector: Pubkey,
     mint_of_token_whitelisted: Pubkey,
     minimum_deposit: u64,
     maximum_deposit: u64,
+    fee_amount: u64,
 ) -> Result<Signature, Box<dyn std::error::Error>> {
     let (bridge_pda, _) = Pubkey::find_program_address(&[b"bridge_state"], &program_id);
 
@@ -34,7 +36,9 @@ pub async fn process_initialize_contract(
     let method = get_function_hash("global", "initialize_contract");
 
     let init_another = bridge_program_instructions::InitializeContract {
-        relayer_pk,
+        fee_collector,
+        fee_amount,
+        relayer_pubkey,
         minimum_deposit,
         maximum_deposit,
     };
@@ -84,13 +88,13 @@ pub async fn process_update_relayer(
     rpc_client: &RpcClient,
     signer: &dyn Signer,
     program_id: Pubkey,
-    relayer_pk: Pubkey,
+    relayer_pubkey: Pubkey,
 ) -> Result<Signature, Box<dyn std::error::Error>> {
     let (bridge_pda, _) = Pubkey::find_program_address(&[b"bridge_state"], &program_id);
 
     let method = get_function_hash("global", "update_relayer");
 
-    let update_relayer = bridge_program_instructions::UpdateRelayer { relayer_pk };
+    let update_relayer = bridge_program_instructions::UpdateRelayer { relayer_pubkey };
 
     let mut method_bytes = method.to_vec();
 
@@ -354,16 +358,16 @@ pub async fn process_set_deposit_limits(
     Ok(signature)
 }
 
-pub async fn process_pause_contract(
+pub async fn process_public_pause_contract(
     rpc_client: &RpcClient,
     signer: &dyn Signer,
     program_id: Pubkey,
 ) -> Result<Signature, Box<dyn std::error::Error>> {
     let (bridge_pda, _) = Pubkey::find_program_address(&[b"bridge_state"], &program_id);
 
-    let method = get_function_hash("global", "pause");
+    let method = get_function_hash("global", "public_pause");
 
-    let pause_contract = bridge_program_instructions::Pause {};
+    let pause_contract = bridge_program_instructions::PublicPause {};
 
     let mut method_bytes = method.to_vec();
 
@@ -402,16 +406,112 @@ pub async fn process_pause_contract(
     Ok(signature)
 }
 
-pub async fn process_unpause_contract(
+pub async fn process_relayer_pause(
     rpc_client: &RpcClient,
     signer: &dyn Signer,
     program_id: Pubkey,
 ) -> Result<Signature, Box<dyn std::error::Error>> {
     let (bridge_pda, _) = Pubkey::find_program_address(&[b"bridge_state"], &program_id);
 
-    let method = get_function_hash("global", "unpause");
+    let method = get_function_hash("global", "relayer_pause");
 
-    let unpause_contract = bridge_program_instructions::Unpause {};
+    let pause_contract = bridge_program_instructions::RelayerPause {};
+
+    let mut method_bytes = method.to_vec();
+
+    method_bytes.append(&mut pause_contract.try_to_vec()?);
+
+    let ix = Instruction::new_with_bytes(
+        program_id,
+        &method_bytes,
+        vec![
+            AccountMeta::new(bridge_pda, false),
+            AccountMeta::new_readonly(signer.pubkey(), true),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+    );
+
+    let mut tx = Transaction::new_unsigned(Message::new(&[ix], Some(&signer.pubkey())));
+
+    let blockhash = rpc_client
+        .get_latest_blockhash()
+        .await
+        .map_err(|err| format!("error: unable to get latest blockhash: {err}"))?;
+
+    tx.try_sign(&vec![signer], blockhash)
+        .map_err(|err| format!("error: failed to sign transaction: {err}"))?;
+
+    let config = RpcSendTransactionConfig {
+        skip_preflight: true,
+        ..RpcSendTransactionConfig::default()
+    };
+
+    let signature = rpc_client
+        .send_transaction_with_config(&tx, config)
+        .await
+        .map_err(|err| format!("error: send transaction: {err}"))?;
+
+    Ok(signature)
+}
+
+pub async fn process_relayer_unpause(
+    rpc_client: &RpcClient,
+    signer: &dyn Signer,
+    program_id: Pubkey,
+) -> Result<Signature, Box<dyn std::error::Error>> {
+    let (bridge_pda, _) = Pubkey::find_program_address(&[b"bridge_state"], &program_id);
+
+    let method = get_function_hash("global", "relayer_unpause");
+
+    let unpause_contract = bridge_program_instructions::RelayerUnpause {};
+
+    let mut method_bytes = method.to_vec();
+
+    method_bytes.append(&mut unpause_contract.try_to_vec()?);
+
+    let ix = Instruction::new_with_bytes(
+        program_id,
+        &method_bytes,
+        vec![
+            AccountMeta::new(bridge_pda, false),
+            AccountMeta::new_readonly(signer.pubkey(), true),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+    );
+
+    let mut tx = Transaction::new_unsigned(Message::new(&[ix], Some(&signer.pubkey())));
+
+    let blockhash = rpc_client
+        .get_latest_blockhash()
+        .await
+        .map_err(|err| format!("error: unable to get latest blockhash: {err}"))?;
+
+    tx.try_sign(&vec![signer], blockhash)
+        .map_err(|err| format!("error: failed to sign transaction: {err}"))?;
+
+    let config = RpcSendTransactionConfig {
+        skip_preflight: true,
+        ..RpcSendTransactionConfig::default()
+    };
+
+    let signature = rpc_client
+        .send_transaction_with_config(&tx, config)
+        .await
+        .map_err(|err| format!("error: send transaction: {err}"))?;
+
+    Ok(signature)
+}
+
+pub async fn process_public_unpause_contract(
+    rpc_client: &RpcClient,
+    signer: &dyn Signer,
+    program_id: Pubkey,
+) -> Result<Signature, Box<dyn std::error::Error>> {
+    let (bridge_pda, _) = Pubkey::find_program_address(&[b"bridge_state"], &program_id);
+
+    let method = get_function_hash("global", "public_unpause");
+
+    let unpause_contract = bridge_program_instructions::PublicUnpause {};
 
     let mut method_bytes = method.to_vec();
 
