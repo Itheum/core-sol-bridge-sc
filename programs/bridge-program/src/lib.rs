@@ -4,7 +4,6 @@ mod contexts;
 use contexts::*;
 mod constants;
 mod errors;
-mod macros;
 mod states;
 use errors::*;
 mod utils;
@@ -36,6 +35,13 @@ pub mod bridge_program {
         )
     }
 
+    pub fn update_fee_collector(
+        ctx: Context<UpdateFeeCollector>,
+        fee_collector: Pubkey,
+    ) -> Result<()> {
+        ctx.accounts.update_fee_collector(fee_collector)
+    }
+
     pub fn update_relayer(ctx: Context<UpdateRelayer>, relayer_pubkey: Pubkey) -> Result<()> {
         ctx.accounts.update_relayer(relayer_pubkey)
     }
@@ -65,12 +71,20 @@ pub mod bridge_program {
         ctx.accounts.set_fee_amount(fee_amount)
     }
 
-    pub fn pause(ctx: Context<ContractState>) -> Result<()> {
-        ctx.accounts.pause()
+    pub fn relayer_pause(ctx: Context<RelayerState>) -> Result<()> {
+        ctx.accounts.relayer_pause()
     }
 
-    pub fn unpause(ctx: Context<ContractState>) -> Result<()> {
-        ctx.accounts.unpause()
+    pub fn relayer_unpause(ctx: Context<RelayerState>) -> Result<()> {
+        ctx.accounts.relayer_unpause()
+    }
+
+    pub fn public_pause(ctx: Context<PublicState>) -> Result<()> {
+        ctx.accounts.public_pause()
+    }
+
+    pub fn public_unpause(ctx: Context<PublicState>) -> Result<()> {
+        ctx.accounts.public_unpause()
     }
 
     pub fn set_whitelist_active(ctx: Context<WhitelistState>) -> Result<()> {
@@ -94,7 +108,11 @@ pub mod bridge_program {
         amount: u64,
         _receiver: Pubkey,
     ) -> Result<()> {
-        require_active!(ctx.accounts.bridge_state);
+        require!(
+            ctx.accounts.bridge_state.relayer_state == State::Active.to_code(),
+            Errors::ProgramIsPaused
+        );
+
         ctx.accounts.send_from_liquidity(amount)
     }
 
@@ -104,7 +122,10 @@ pub mod bridge_program {
         destination_address: String,
         destination_address_signature: String,
     ) -> Result<()> {
-        require_active!(ctx.accounts.bridge_state);
+        require!(
+            ctx.accounts.bridge_state.public_state == State::Active.to_code(),
+            Errors::ProgramIsPaused
+        );
 
         require!(
             check_amount(amount, ctx.accounts.mint_of_token_sent.decimals),

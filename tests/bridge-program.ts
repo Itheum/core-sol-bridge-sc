@@ -288,14 +288,16 @@ describe('bridge-program', () => {
 
     let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda)
 
-    assert(bridgeState.state === 0)
+    assert(bridgeState.relayerState === 0)
+    assert(bridgeState.publicState === 0)
     assert(bridgeState.relayerPubkey.equals(admin.publicKey))
     assert(bridgeState.vault.equals(vault_ata))
     assert(bridgeState.vaultAmount.toNumber() === 0)
     assert(
       bridgeState.mintOfTokenWhitelisted.equals(itheum_token_mint.publicKey)
     )
-    assert(bridgeState.state === 0)
+    assert(bridgeState.relayerState === 0)
+    assert(bridgeState.publicState === 0)
 
     let vault = await getAccount(connection, vault_ata)
 
@@ -343,6 +345,59 @@ describe('bridge-program', () => {
     }
   })
 
+  it('Change fee collector by user (should fail)', async () => {
+    try {
+      await program.methods
+        .updateFeeCollector(fee_collector.publicKey)
+        .signers([user])
+        .accounts({
+          bridgeState: bridgeStatePda,
+          authority: user.publicKey,
+        })
+        .rpc()
+      assert(false, 'Should have thrown error')
+    } catch (err) {
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2012)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'An address constraint was violated'
+      )
+    }
+  })
+
+  it('Change fee amount by user (should fail)', async () => {
+    try {
+      await program.methods
+        .setFeeAmount(new anchor.BN(1000e9))
+        .signers([user])
+        .accounts({
+          bridgeState: bridgeStatePda,
+          authority: user.publicKey,
+        })
+        .rpc()
+      assert(false, 'Should have thrown error')
+    } catch (err) {
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2012)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'An address constraint was violated'
+      )
+    }
+  })
+
+  it('Change fee collector by admin', async () => {
+    await program.methods
+      .updateFeeCollector(fee_collector.publicKey)
+      .signers([admin])
+      .accounts({
+        bridgeState: bridgeStatePda,
+        authority: admin.publicKey,
+      })
+      .rpc()
+
+    let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda)
+
+    assert(bridgeState.feeCollector.equals(fee_collector.publicKey))
+  })
+
   it('Change whitelist and relayer by admin ', async () => {
     await program.methods
       .updateWhitelistedMint()
@@ -372,7 +427,8 @@ describe('bridge-program', () => {
     assert(
       bridgeState.mintOfTokenWhitelisted.equals(itheum_token_mint.publicKey)
     )
-    assert(bridgeState.state === 0)
+    assert(bridgeState.relayerState === 0)
+    assert(bridgeState.publicState === 0)
   })
 
   it('Add liquidity by user (should fail)', async () => {
@@ -506,7 +562,8 @@ describe('bridge-program', () => {
     assert(
       bridgeState.mintOfTokenWhitelisted.equals(itheum_token_mint.publicKey)
     )
-    assert(bridgeState.state === 0)
+    assert(bridgeState.relayerState === 0)
+    assert(bridgeState.publicState === 0)
 
     let vault = await getAccount(connection, vault_ata)
 
@@ -542,7 +599,8 @@ describe('bridge-program', () => {
     assert(
       bridgeState.mintOfTokenWhitelisted.equals(itheum_token_mint.publicKey)
     )
-    assert(bridgeState.state === 0)
+    assert(bridgeState.relayerState === 0)
+    assert(bridgeState.publicState === 0)
 
     let vault = await getAccount(connection, vault_ata)
 
@@ -658,7 +716,8 @@ describe('bridge-program', () => {
     assert(
       bridgeState.mintOfTokenWhitelisted.equals(itheum_token_mint.publicKey)
     )
-    assert(bridgeState.state === 0)
+    assert(bridgeState.relayerState === 0)
+    assert(bridgeState.publicState === 0)
 
     let vault = await getAccount(connection, vault_ata)
 
@@ -686,7 +745,8 @@ describe('bridge-program', () => {
     assert(
       bridgeState.mintOfTokenWhitelisted.equals(itheum_token_mint.publicKey)
     )
-    assert(bridgeState.state === 0)
+    assert(bridgeState.relayerState === 0)
+    assert(bridgeState.publicState === 0)
 
     let adminAta = await getAccount(connection, itheum_token_admin_ata)
 
@@ -700,7 +760,7 @@ describe('bridge-program', () => {
   it('Pause contract by user (should fail)', async () => {
     try {
       await program.methods
-        .pause()
+        .publicPause()
         .signers([user])
         .accounts({
           bridgeState: bridgeStatePda,
@@ -718,7 +778,16 @@ describe('bridge-program', () => {
 
   it('Pause contract by admin', async () => {
     await program.methods
-      .pause()
+      .publicPause()
+      .signers([admin])
+      .accounts({
+        bridgeState: bridgeStatePda,
+        authority: admin.publicKey,
+      })
+      .rpc()
+
+    await program.methods
+      .relayerPause()
       .signers([admin])
       .accounts({
         bridgeState: bridgeStatePda,
@@ -728,13 +797,14 @@ describe('bridge-program', () => {
 
     let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda)
 
-    assert(bridgeState.state === 0)
+    assert(bridgeState.relayerState === 0)
+    assert(bridgeState.publicState === 0)
   })
 
   it('Unpause contract by user (should fail)', async () => {
     try {
       await program.methods
-        .unpause()
+        .publicPause()
         .signers([user])
         .accounts({
           bridgeState: bridgeStatePda,
@@ -750,9 +820,9 @@ describe('bridge-program', () => {
     }
   })
 
-  it('Unpause contract by admin', async () => {
+  it('Unpause contract by admin - public', async () => {
     await program.methods
-      .unpause()
+      .publicUnpause()
       .signers([admin])
       .accounts({
         bridgeState: bridgeStatePda,
@@ -762,7 +832,22 @@ describe('bridge-program', () => {
 
     let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda)
 
-    assert(bridgeState.state === 1)
+    assert(bridgeState.publicState === 1)
+  })
+
+  it('Unpause contract by admin - relayer', async () => {
+    await program.methods
+      .relayerUnpause()
+      .signers([admin])
+      .accounts({
+        bridgeState: bridgeStatePda,
+        authority: admin.publicKey,
+      })
+      .rpc()
+
+    let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda)
+
+    assert(bridgeState.relayerState === 1)
   })
 
   it('Send from liquidity by user (should fail)', async () => {
@@ -887,9 +972,77 @@ describe('bridge-program', () => {
     }
   })
 
-  it('Send from liquidity by relayer - paused contract (should fail)', async () => {
+  it('Change relayer address by admin', async () => {
     await program.methods
-      .pause()
+      .updateRelayer(user2.publicKey)
+      .signers([admin])
+      .accounts({
+        bridgeState: bridgeStatePda,
+        authority: admin.publicKey,
+      })
+      .rpc()
+
+    let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda)
+
+    assert(bridgeState.relayerPubkey.equals(user2.publicKey))
+  })
+
+  it('Pause relayer by relayer - (should fail)', async () => {
+    try {
+      await program.methods
+        .relayerPause()
+        .signers([user2])
+        .accounts({
+          bridgeState: bridgeStatePda,
+          authority: user2.publicKey,
+        })
+        .rpc()
+      assert(false, 'Should have thrown error')
+    } catch (err) {
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6004)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'Not privileged'
+      )
+    }
+  })
+
+  it('Unpause relayer by relayer - (should fail)', async () => {
+    try {
+      await program.methods
+        .relayerUnpause()
+        .signers([user2])
+        .accounts({
+          bridgeState: bridgeStatePda,
+          authority: user2.publicKey,
+        })
+        .rpc()
+      assert(false, 'Should have thrown error')
+    } catch (err) {
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6004)
+      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
+        'Not privileged'
+      )
+    }
+  })
+
+  it('Change relayer address by admin', async () => {
+    await program.methods
+      .updateRelayer(admin.publicKey)
+      .signers([admin])
+      .accounts({
+        bridgeState: bridgeStatePda,
+        authority: admin.publicKey,
+      })
+      .rpc()
+
+    let bridgeState = await program.account.bridgeState.fetch(bridgeStatePda)
+
+    assert(bridgeState.relayerPubkey.equals(admin.publicKey))
+  })
+
+  it('Send from liquidity by relayer - paused relayer (should fail)', async () => {
+    await program.methods
+      .relayerPause()
       .signers([admin])
       .accounts({
         bridgeState: bridgeStatePda,
@@ -919,7 +1072,7 @@ describe('bridge-program', () => {
 
   it('Send from liquidity by relayer to user', async () => {
     await program.methods
-      .unpause()
+      .relayerUnpause()
       .signers([admin])
       .accounts({
         bridgeState: bridgeStatePda,
@@ -952,9 +1105,9 @@ describe('bridge-program', () => {
     assert(bridge.vaultAmount.toNumber() == 900e9)
   })
 
-  it('Send to liquidity by user - paused contract (should fail)', async () => {
+  it('Send to liquidity by user - paused public (should fail)', async () => {
     await program.methods
-      .pause()
+      .publicPause()
       .signers([admin])
       .accounts({
         bridgeState: bridgeStatePda,
@@ -989,7 +1142,7 @@ describe('bridge-program', () => {
 
   it('Sent to liquidity by user - wrong amount (should fail)', async () => {
     await program.methods
-      .unpause()
+      .publicUnpause()
       .signers([admin])
       .accounts({
         bridgeState: bridgeStatePda,
