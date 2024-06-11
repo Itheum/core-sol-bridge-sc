@@ -1,9 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token::{
-        close_account, transfer_checked, CloseAccount, Mint, Token, TokenAccount, TransferChecked,
-    },
+    token::{transfer_checked, Mint, Token, TokenAccount, TransferChecked},
 };
 
 use crate::{
@@ -62,9 +60,9 @@ pub struct SendToLiquidity<'info> {
         init_if_needed,
         payer=authority,
         associated_token::mint=mint_of_fee_token_sent,
-        associated_token::authority=bridge_state,
+        associated_token::authority=fee_collector,
     )]
-    pub temp_fee_collector: Option<Account<'info, TokenAccount>>, // a temporary ATA that will hold the transaction wSOL fee
+    pub fee_collector_ata: Option<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
@@ -87,17 +85,10 @@ pub struct SendToLiquidity<'info> {
 impl<'info> SendToLiquidity<'info> {
     pub fn send_to_liquidity(&mut self, amount: u64) -> Result<()> {
         if self.bridge_state.fee_amount > 0 {
-            let signer_seeds: [&[&[u8]]; 1] = [&[b"bridge_state", &[self.bridge_state.bump]]];
-
             transfer_checked(
                 self.into_send_fee_context(),
                 self.bridge_state.fee_amount,
                 self.mint_of_fee_token_sent.as_ref().unwrap().decimals,
-            )?;
-
-            close_account(
-                self.into_close_account_temp_fee_collector_context()
-                    .with_signer(&signer_seeds),
             )?;
         }
 
@@ -129,24 +120,13 @@ impl<'info> SendToLiquidity<'info> {
                 .as_ref()
                 .unwrap()
                 .to_account_info(),
-            to: self.temp_fee_collector.as_ref().unwrap().to_account_info(),
+            to: self.fee_collector_ata.as_ref().unwrap().to_account_info(),
             mint: self
                 .mint_of_fee_token_sent
                 .as_ref()
                 .unwrap()
                 .to_account_info(),
             authority: self.authority.to_account_info(),
-        };
-        CpiContext::new(self.token_program.to_account_info(), cpi_accounts)
-    }
-
-    fn into_close_account_temp_fee_collector_context(
-        &self,
-    ) -> CpiContext<'_, '_, '_, 'info, CloseAccount<'info>> {
-        let cpi_accounts = CloseAccount {
-            account: self.temp_fee_collector.as_ref().unwrap().to_account_info(),
-            destination: self.fee_collector.as_ref().unwrap().to_account_info(),
-            authority: self.bridge_state.to_account_info(),
         };
         CpiContext::new(self.token_program.to_account_info(), cpi_accounts)
     }
