@@ -2,8 +2,8 @@ use crate::admin_endpoints::{
     process_add_liquidity, process_add_to_whitelist, process_initialize_contract,
     process_public_pause_contract, process_public_unpause_contract, process_relayer_pause,
     process_relayer_unpause, process_remove_from_whitelist, process_remove_liquidity,
-    process_set_deposit_limits, process_set_whitelist_active, process_set_whitelist_inactive,
-    process_update_relayer, process_update_whitelisted_mint,
+    process_set_deposit_limits, process_set_fee_amount, process_set_whitelist_active,
+    process_set_whitelist_inactive, process_update_relayer, process_update_whitelisted_mint,
 };
 use anchor_client::solana_sdk::signature::Signer;
 
@@ -197,6 +197,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .value_name("MAXIMUM_DEPOSIT")
                         .takes_value(true)
                         .help("Maximum deposit"),
+                ),
+        )
+        .subcommand(
+            Command::new("setFeeAmount")
+                .about("Send a set fee amount transaction")
+                .arg(
+                    Arg::new("fee_amount")
+                        .required(true)
+                        .value_name("FEE_AMOUNT")
+                        .takes_value(true)
+                        .help("Fee amount"),
                 ),
         )
         .subcommand(Command::new("publicPause").about("Send a pause transaction"))
@@ -406,6 +417,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             });
 
             println!("Signature: {signature}");
+        }
+        ("setFeeAmount", arg_matches) => {
+            let fee_amount = arg_matches.get_one::<String>("fee_amount").unwrap();
+
+            let signature = process_set_fee_amount(
+                &rpc_client,
+                config.default_signer.as_ref(),
+                bridge_program::ID,
+                fee_amount.parse::<u64>().unwrap(),
+            )
+            .await
+            .unwrap_or_else(|err| {
+                eprintln!("error: send transaction: {err}");
+                exit(1);
+            });
+            println!("Signature: {signature}")
         }
         ("publicPause", _arg_matches) => {
             let signature = process_public_pause_contract(

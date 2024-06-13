@@ -139,7 +139,7 @@ pub mod bridge_program {
         if ctx.accounts.bridge_state.fee_amount > 0 {
             require!(
                 ctx.accounts.authority_fee_token_account.is_some()
-                    && ctx.accounts.temp_fee_collector.is_some()
+                    && ctx.accounts.fee_collector_ata.is_some()
                     && ctx.accounts.fee_collector.is_some()
                     && ctx.accounts.mint_of_fee_token_sent.is_some(),
                 Errors::NoFeeAccountsProvided

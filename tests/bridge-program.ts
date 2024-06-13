@@ -88,9 +88,9 @@ describe('bridge-program', () => {
     true
   )
 
-  const temp_fee_collector = getAssociatedTokenAddressSync(
+  const fee_collector_ata = getAssociatedTokenAddressSync(
     NATIVE_MINT,
-    bridgeStatePda,
+    fee_collector.publicKey,
     true
   )
 
@@ -229,7 +229,7 @@ describe('bridge-program', () => {
           feeCollector: null,
           mintOfFeeTokenSent: null,
           authorityFeeTokenAccount: null,
-          tempFeeCollector: null,
+          feeCollectorAta: null,
         })
         .rpc()
       assert(false, 'Should have thrown error')
@@ -1129,7 +1129,7 @@ describe('bridge-program', () => {
           feeCollector: null,
           mintOfFeeTokenSent: null,
           authorityFeeTokenAccount: null,
-          tempFeeCollector: null,
+          feeCollectorAta: null,
         })
         .rpc()
     } catch (err) {
@@ -1164,7 +1164,7 @@ describe('bridge-program', () => {
           feeCollector: null,
           mintOfFeeTokenSent: null,
           authorityFeeTokenAccount: null,
-          tempFeeCollector: null,
+          feeCollectorAta: null,
         })
         .rpc()
     } catch (err) {
@@ -1190,7 +1190,7 @@ describe('bridge-program', () => {
           feeCollector: null,
           mintOfFeeTokenSent: null,
           authorityFeeTokenAccount: null,
-          tempFeeCollector: null,
+          feeCollectorAta: null,
         })
         .rpc()
     } catch (err) {
@@ -1216,7 +1216,7 @@ describe('bridge-program', () => {
           feeCollector: null,
           mintOfFeeTokenSent: null,
           authorityFeeTokenAccount: null,
-          tempFeeCollector: null,
+          feeCollectorAta: null,
         })
         .rpc()
     } catch (err) {
@@ -1242,7 +1242,7 @@ describe('bridge-program', () => {
           feeCollector: null,
           mintOfFeeTokenSent: null,
           authorityFeeTokenAccount: null,
-          tempFeeCollector: null,
+          feeCollectorAta: null,
         })
         .rpc()
     } catch (err) {
@@ -1285,7 +1285,7 @@ describe('bridge-program', () => {
           feeCollector: null,
           mintOfFeeTokenSent: null,
           authorityFeeTokenAccount: null,
-          tempFeeCollector: null,
+          feeCollectorAta: null,
         })
         .rpc()
     } catch (err) {
@@ -1327,7 +1327,7 @@ describe('bridge-program', () => {
         feeCollector: null,
         mintOfFeeTokenSent: null,
         authorityFeeTokenAccount: null,
-        tempFeeCollector: null,
+        feeCollectorAta: null,
       })
       .rpc()
 
@@ -1395,7 +1395,7 @@ describe('bridge-program', () => {
           feeCollector: null,
           mintOfFeeTokenSent: null,
           authorityFeeTokenAccount: null,
-          tempFeeCollector: null,
+          feeCollectorAta: null,
         })
         .rpc()
     } catch (error) {
@@ -1443,7 +1443,7 @@ describe('bridge-program', () => {
           feeCollector: null,
           mintOfFeeTokenSent: null,
           authorityFeeTokenAccount: null,
-          tempFeeCollector: null,
+          feeCollectorAta: null,
         })
         .rpc()
     } catch (err) {
@@ -1468,7 +1468,7 @@ describe('bridge-program', () => {
         feeCollector: null,
         mintOfFeeTokenSent: null,
         authorityFeeTokenAccount: null,
-        tempFeeCollector: null,
+        feeCollectorAta: null,
       })
       .rpc()
 
@@ -1570,7 +1570,7 @@ describe('bridge-program', () => {
           feeCollector: null,
           mintOfFeeTokenSent: null,
           authorityFeeTokenAccount: null,
-          tempFeeCollector: null,
+          feeCollectorAta: null,
         })
         .rpc()
     } catch (err) {
@@ -1608,7 +1608,7 @@ describe('bridge-program', () => {
           feeCollector: null,
           mintOfFeeTokenSent: null,
           authorityFeeTokenAccount: null,
-          tempFeeCollector: null,
+          feeCollectorAta: null,
         })
         .rpc()
     } catch (err) {
@@ -1633,7 +1633,7 @@ describe('bridge-program', () => {
         feeCollector: null,
         mintOfFeeTokenSent: null,
         authorityFeeTokenAccount: null,
-        tempFeeCollector: null,
+        feeCollectorAta: null,
       })
       .rpc()
   })
@@ -1703,39 +1703,13 @@ describe('bridge-program', () => {
           feeCollector: null,
           mintOfFeeTokenSent: NATIVE_MINT,
           authorityFeeTokenAccount: user2_wsol_ata,
-          tempFeeCollector: temp_fee_collector,
+          feeCollectorAta: fee_collector_ata,
         })
         .rpc()
     } catch (err) {
-      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6008)
+      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(2020)
       expect((err as anchor.AnchorError).error.errorMessage).to.equal(
-        'Not all fee accounts were provided'
-      )
-    }
-  })
-
-  it('Send to liquidity by user2 - required fee - feeCollector mismatch (should fail)', async () => {
-    try {
-      await program.methods
-        .sendToLiquidity(new anchor.BN(100e9), 'erd...', 'signature')
-        .signers([user2])
-        .accounts({
-          bridgeState: bridgeStatePda,
-          vault: vault_ata,
-          whitelist: null,
-          mintOfTokenSent: itheum_token_mint.publicKey,
-          authority: user2.publicKey,
-          authorityTokenAccount: itheum_token_user2_ata,
-          feeCollector: user2.publicKey,
-          mintOfFeeTokenSent: NATIVE_MINT,
-          authorityFeeTokenAccount: user2_wsol_ata,
-          tempFeeCollector: temp_fee_collector,
-        })
-        .rpc()
-    } catch (err) {
-      expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6009)
-      expect((err as anchor.AnchorError).error.errorMessage).to.equal(
-        'Fee collector mismatch'
+        'A required account for the constraint is None'
       )
     }
   })
@@ -1755,7 +1729,7 @@ describe('bridge-program', () => {
           feeCollector: fee_collector.publicKey,
           mintOfFeeTokenSent: null,
           authorityFeeTokenAccount: user2_wsol_ata,
-          tempFeeCollector: temp_fee_collector,
+          feeCollectorAta: fee_collector_ata,
         })
         .rpc()
     } catch (err) {
@@ -1781,7 +1755,7 @@ describe('bridge-program', () => {
           feeCollector: fee_collector.publicKey,
           mintOfFeeTokenSent: NATIVE_MINT,
           authorityFeeTokenAccount: null,
-          tempFeeCollector: temp_fee_collector,
+          feeCollectorAta: fee_collector_ata,
         })
         .rpc()
     } catch (err) {
@@ -1821,7 +1795,7 @@ describe('bridge-program', () => {
           feeCollector: fee_collector.publicKey,
           mintOfFeeTokenSent: NATIVE_MINT,
           authorityFeeTokenAccount: user2_wsol_ata,
-          tempFeeCollector: temp_fee_collector,
+          feeCollectorAta: fee_collector_ata,
         })
         .rpc()
     } catch (err) {
@@ -1862,7 +1836,7 @@ describe('bridge-program', () => {
           feeCollector: fee_collector.publicKey,
           mintOfFeeTokenSent: NATIVE_MINT,
           authorityFeeTokenAccount: user_wsol_ata,
-          tempFeeCollector: temp_fee_collector,
+          feeCollectorAta: fee_collector_ata,
         })
         .rpc()
     } catch (err) {
@@ -1888,7 +1862,7 @@ describe('bridge-program', () => {
           feeCollector: fee_collector.publicKey,
           mintOfFeeTokenSent: NATIVE_MINT,
           authorityFeeTokenAccount: another_token_user2_ata,
-          tempFeeCollector: temp_fee_collector,
+          feeCollectorAta: fee_collector_ata,
         })
         .rpc()
     } catch (err) {
@@ -1914,7 +1888,7 @@ describe('bridge-program', () => {
           feeCollector: fee_collector.publicKey,
           mintOfFeeTokenSent: NATIVE_MINT,
           authorityFeeTokenAccount: user2_wsol_ata,
-          tempFeeCollector: null,
+          feeCollectorAta: null,
         })
         .rpc()
     } catch (err) {
@@ -1940,7 +1914,7 @@ describe('bridge-program', () => {
           feeCollector: fee_collector.publicKey,
           mintOfFeeTokenSent: NATIVE_MINT,
           authorityFeeTokenAccount: user2_wsol_ata,
-          tempFeeCollector: vault_ata,
+          feeCollectorAta: vault_ata,
         })
         .rpc()
     } catch (err) {
@@ -1965,28 +1939,19 @@ describe('bridge-program', () => {
         feeCollector: fee_collector.publicKey,
         mintOfFeeTokenSent: NATIVE_MINT,
         authorityFeeTokenAccount: user2_wsol_ata,
-        tempFeeCollector: temp_fee_collector,
+        feeCollectorAta: fee_collector_ata,
       })
       .rpc()
 
-    try {
-      await getAccount(connection, temp_fee_collector)
-    } catch (err) {
-      if (err instanceof TokenAccountNotFoundError) {
-        assert(true)
-      }
-    }
-
-    let fee_collector_account_balance = await connection.getBalance(
-      fee_collector.publicKey
+    let fee_collector_account_balance = await connection.getTokenAccountBalance(
+      fee_collector_ata
     )
 
-    const rentExemptBalance =
-      await connection.getMinimumBalanceForRentExemption(165) // default for TokenAccount
+    const expected_balance = 0.1e9 //  0.1e9 fee
 
-    const expected_balance = rentExemptBalance + 10.1e9 // 10e9 initial balance + 0.1e9 fee + rentExempt
-
-    assert(fee_collector_account_balance == expected_balance)
+    assert(
+      Number(fee_collector_account_balance.value.amount) == expected_balance
+    )
 
     let user2Ata = await getAccount(connection, itheum_token_user2_ata)
 

@@ -358,6 +358,55 @@ pub async fn process_set_deposit_limits(
     Ok(signature)
 }
 
+pub async fn process_set_fee_amount(
+    rpc_client: &RpcClient,
+    signer: &dyn Signer,
+    program_id: Pubkey,
+    fee_amount: u64,
+) -> Result<Signature, Box<dyn std::error::Error>> {
+    let (bridge_pda, _) = Pubkey::find_program_address(&[b"bridge_state"], &program_id);
+
+    let method = get_function_hash("global", "set_fee_amount");
+
+    let set_fee_amount = bridge_program_instructions::SetFeeAmount { fee_amount };
+
+    let mut method_bytes = method.to_vec();
+
+    method_bytes.append(&mut set_fee_amount.try_to_vec()?);
+
+    let ix = Instruction::new_with_bytes(
+        program_id,
+        &method_bytes,
+        vec![
+            AccountMeta::new(bridge_pda, false),
+            AccountMeta::new_readonly(signer.pubkey(), true),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+    );
+
+    let mut tx = Transaction::new_unsigned(Message::new(&[ix], Some(&signer.pubkey())));
+
+    let blockhash = rpc_client
+        .get_latest_blockhash()
+        .await
+        .map_err(|err| format!("error: unable to get latest blockhash: {err}"))?;
+
+    tx.try_sign(&vec![signer], blockhash)
+        .map_err(|err| format!("error: failed to sign transaction: {err}"))?;
+
+    let config = RpcSendTransactionConfig {
+        skip_preflight: true,
+        ..RpcSendTransactionConfig::default()
+    };
+
+    let signature = rpc_client
+        .send_transaction_with_config(&tx, config)
+        .await
+        .map_err(|err| format!("error: send transaction: {err}"))?;
+
+    Ok(signature)
+}
+
 pub async fn process_public_pause_contract(
     rpc_client: &RpcClient,
     signer: &dyn Signer,
