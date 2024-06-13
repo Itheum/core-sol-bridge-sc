@@ -983,6 +983,7 @@ dependencies = [
  "anchor-lang 0.30.0",
  "anchor-spl",
  "solana-program",
+ "solana-security-txt",
  "spl-token",
 ]
 

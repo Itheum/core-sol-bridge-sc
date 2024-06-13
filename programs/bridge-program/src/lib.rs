@@ -8,6 +8,18 @@ mod states;
 use errors::*;
 mod utils;
 use utils::*;
+
+#[cfg(not(feature = "no-entrypoint"))]
+solana_security_txt::security_txt! {
+    name: "itheum-bridge-program",
+    project_url: "https://www.itheum.io/",
+    contacts: "will be added",
+    policy: "will be added",
+    source_code: "https://github.com/Itheum/core-sol-bridge-sc",
+    preferred_languages: "en",
+    auditors: "will be added"
+}
+
 declare_id!("bitH2bkiBmbcio1riko9qLhkgKdAtY4BEx61ZQuvrfj");
 
 #[program]
