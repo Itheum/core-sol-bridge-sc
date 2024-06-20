@@ -13,11 +13,11 @@ use utils::*;
 solana_security_txt::security_txt! {
     name: "itheum-bridge-program",
     project_url: "https://www.itheum.io/",
-    contacts: "will be added",
-    policy: "will be added",
+    contacts: "https://itheum.io/bug-bounty",
+    policy: "https://itheum.io/bug-bounty",
     source_code: "https://github.com/Itheum/core-sol-bridge-sc",
     preferred_languages: "en",
-    auditors: "will be added"
+    auditors: "https://itheum.io/audits"
 }
 
 declare_id!("bitH2bkiBmbcio1riko9qLhkgKdAtY4BEx61ZQuvrfj");
