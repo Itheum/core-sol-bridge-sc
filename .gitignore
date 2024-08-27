@@ -9,3 +9,5 @@ test-ledger
 
 Anchor.toml
 .env
+
+*wallet*.json

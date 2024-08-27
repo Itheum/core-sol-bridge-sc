@@ -20,7 +20,7 @@ solana_security_txt::security_txt! {
     auditors: "https://itheum.io/audits"
 }
 
-declare_id!("bitH2bkiBmbcio1riko9qLhkgKdAtY4BEx61ZQuvrfj");
+declare_id!("4wDs9FnvdksFXy69UKVgi7WWqtYJmbM6TiMCEWY9wJz9");
 
 #[program]
 pub mod bridge_program {
